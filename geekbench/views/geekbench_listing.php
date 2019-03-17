@@ -20,6 +20,11 @@ new geekbench_model;
 		      	<th data-i18n="listing.computername" data-colname='machine.computer_name'></th>
 		        <th data-i18n="serial" data-colname='reportdata.serial_number'></th>
 		        <th data-i18n="username" data-colname='reportdata.long_username'></th>
+   		        <th data-i18n="description" data-colname='machine.machine_desc'></th>
+		        <th data-i18n="memory" data-colname='machine.physical_memory'></th>
+		        <th data-i18n="machine.cores" data-colname='machine.number_processors'></th>
+		        <th data-i18n="machine.arch" data-colname='machine.cpu_arch'></th>
+		        <th data-i18n="machine.cpu_speed" data-colname='machine.current_processor_speed'></th>
 		        <th data-i18n="geekbench.listing.score" data-colname='geekbench.score'></th>
 		        <th data-i18n="geekbench.listing.multiscore" data-colname='geekbench.multiscore'></th>
 		      </tr>
