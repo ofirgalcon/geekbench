@@ -4,8 +4,8 @@ CWD=$(dirname $0)
 CACHEDIR="$CWD/cache"
 geekbenchPref="$CACHEDIR/geekbench.plist"
 
-echo "$CACHEDIR"
-echo "$geekbenchPref"
+#echo "$CACHEDIR"
+#echo "$geekbenchPref"
 # Make sure ard pref exists
 #defaults read "$geekbenchPref" > /dev/null 2>&1 || defaults write "$geekbenchPref" MR created
 
