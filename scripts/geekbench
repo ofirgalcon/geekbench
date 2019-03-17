@@ -24,7 +24,7 @@ mkdir -p "${CACHEDIR}"
 geekbenchText="$(defaults read /usr/local/munki/preflight.d/cache/geekbench.plist)" > /dev/null 2>&1 
 
 if [ "$geekbenchText" == "" ] ; then
-	curl -s "https://www.gal.uk/peanut/benchmarks.csv" > /tmp/benchmarks.csv
+	curl -s "https://raw.githubusercontent.com/ofirgalcon/geekbench/master/benchmarks.csv" > /tmp/benchmarks.csv
 	cpuname="$(sysctl -n machdep.cpu.brand_string)"
 	cpuname="${cpuname//Intel(R)/}"
 	cpuname="${cpuname//Core(TM)2/}"
