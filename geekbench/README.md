@@ -1,9 +1,7 @@
-geekbench module
+GeekBench module
 ==========
 
-Reports on the Apple Remote Desktop information fields. 
-
-Retrieves information from /Library/Preferences/com.apple.RemoteDesktop.
+Reports the GeekBench stats for the computer. 
 
 The following information is stored in the table:
 
