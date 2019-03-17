@@ -1,0 +1,8 @@
+{
+    "geekbench": "Geekbench",
+    "listing": {
+        "score": "Single CPU",
+        "multiscore": "Multi CPU",
+        "title": "Geekbench"
+    }
+}

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+CWD=$(dirname $0)
+CACHEDIR="$CWD/cache"
+geekbenchPref="$CACHEDIR/geekbench.plist"
+
+echo "$CACHEDIR"
+echo "$geekbenchPref"
+# Make sure ard pref exists
+#defaults read "$geekbenchPref" > /dev/null 2>&1 || defaults write "$geekbenchPref" MR created
+
+
+# Skip manual check
+if [ "$1" = 'manualcheck' ]; then
+	echo 'Manual check: skipping'
+	exit 0
+fi
+
+# Create cache dir if it does not exist
+mkdir -p "${CACHEDIR}"
+
+# Business logic goes here
+
+geekbenchText="$(defaults read /usr/local/munki/preflight.d/cache/geekbench.plist)" > /dev/null 2>&1 
+
+if [ "$geekbenchText" == "" ] ; then
+	curl -s "https://www.gal.uk/peanut/benchmarks.csv" > /tmp/benchmarks.csv
+	cpuname="$(sysctl -n machdep.cpu.brand_string)"
+	cpuname="${cpuname//Intel(R)/}"
+	cpuname="${cpuname//Core(TM)2/}"
+	cpuname="${cpuname//CPU/}"
+	cpuname="${cpuname//Xeon(R)/}"
+	cpuname="${cpuname//Duo/}"
+	cpuname="${cpuname//Core(TM)/}"
+	cpuname="$(echo $cpuname | awk -F "@" '{print $1}')"
+	cpuname="${cpuname%"${cpuname##*[![:space:]]}"}"   
+
+	cpuspeed="$(sysctl -n machdep.cpu.brand_string | awk -F "@" '{print $2}')"
+	cleanspeed=$(printf "%.1f\n" ${cpuspeed::+5})
+	cpu="$cpuname @ $cleanspeed"
+	model="$(system_profiler SPHardwareDataType | grep "Model Name" | awk -F ": " '{print $2}')"
+	score=$(cat /tmp/benchmarks.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $5}')
+	score=$(echo $score  | awk '{print $1}')
+	score=$(perl -e 'print sprintf "% 6s\n",shift' $score)
+	multiscore=$(cat /tmp/benchmarks.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $6}')
+	multiscore=$(echo $multiscore  | awk '{print $1}')
+	multiscore=$(perl -e 'print sprintf "% 6s\n",shift' $multiscore)
+	defaults write /usr/local/munki/preflight.d/cache/geekbench.plist score "$score"
+	defaults write /usr/local/munki/preflight.d/cache/geekbench.plist multiscore "$multiscore"
+fi
+	
+
+# Selfdestruct
+# rm -f "${0}"
