@@ -72,7 +72,7 @@ if (( $TimeSince > 860000 )) ; then
 	multiscore=$(perl -e 'print sprintf "% 6s\n",shift' $multiscore)
 	defaults write $geekbenchStats score "$score"
 	defaults write $geekbenchStats multiscore "$multiscore"
-	defaults write /usr/local/munki/preflight.d/cache/geekbench.plist LastRun $(date +%s)
+	defaults write $geekbenchStats LastRun $(date +%s)
 	rm $dstFile*
 
 fi
