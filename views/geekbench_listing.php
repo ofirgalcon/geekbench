@@ -23,7 +23,7 @@ new geekbench_model;
    		        <th data-i18n="description" data-colname='machine.machine_desc'></th>
 		        <th data-i18n="geekbench.listing.score" data-colname='geekbench.score'></th>
 		        <th data-i18n="geekbench.listing.multiscore" data-colname='geekbench.multiscore'></th>
-		        <th data-i18n="gcpu" data-colname='machine.cpu'></th>
+		        <th data-i18n="geekbench.listing.gcpu" data-colname='machine.cpu'></th>
 		        <th data-i18n="machine.cores" data-colname='machine.number_processors'></th>
 		        <th data-i18n="physical_memory" data-colname='machine.physical_memory'></th>
 		      </tr>
