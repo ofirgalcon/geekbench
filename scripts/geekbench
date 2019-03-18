@@ -21,9 +21,11 @@ mkdir -p "${CACHEDIR}"
 
 # Business logic goes here
 
-geekbenchText="$(defaults read /usr/local/munki/preflight.d/cache/geekbench.plist)" > /dev/null 2>&1 
+geekbenchLastRun="$(defaults read /usr/local/munki/preflight.d/cache/geekbench.plist LastRun)" > /dev/null 2>&1 
+TimeNow=`date +%s`
+TimeSince=$((TimeNow-geekbenchLastRun))
 
-if [ "$geekbenchText" == "" ] ; then
+if (( $TimeSince > 860000 )) ; then
 
 	srcFile="/tmp/mr-benchmarks-raw"
 	dstFile="/tmp/mr-benchmarks"
@@ -70,6 +72,7 @@ if [ "$geekbenchText" == "" ] ; then
 	multiscore=$(perl -e 'print sprintf "% 6s\n",shift' $multiscore)
 	defaults write $geekbenchStats score "$score"
 	defaults write $geekbenchStats multiscore "$multiscore"
+	defaults write /usr/local/munki/preflight.d/cache/geekbench.plist LastRun $(date +%s)
 	rm $dstFile*
 
 fi
