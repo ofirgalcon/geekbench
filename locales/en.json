@@ -3,6 +3,8 @@
     "listing": {
         "score": "Single CPU",
         "multiscore": "Multi CPU",
-        "title": "Geekbench"
+        "title": "Geekbench",
+    	"gcpu": "CPU",
+    	"physical_memory": "Memory"
     }
 }

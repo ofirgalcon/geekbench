@@ -2,12 +2,12 @@
 
 CWD=$(dirname $0)
 CACHEDIR="$CWD/cache"
-geekbenchPref="$CACHEDIR/geekbench.plist"
+geekbenchStats="$CACHEDIR/geekbench.plist"
 
 #echo "$CACHEDIR"
-#echo "$geekbenchPref"
+#echo "$geekbenchStats"
 # Make sure ard pref exists
-#defaults read "$geekbenchPref" > /dev/null 2>&1 || defaults write "$geekbenchPref" MR created
+#defaults read "$geekbenchStats" > /dev/null 2>&1 || defaults write "$geekbenchStats" MR created
 
 
 # Skip manual check
@@ -24,7 +24,30 @@ mkdir -p "${CACHEDIR}"
 geekbenchText="$(defaults read /usr/local/munki/preflight.d/cache/geekbench.plist)" > /dev/null 2>&1 
 
 if [ "$geekbenchText" == "" ] ; then
-	curl -s "https://raw.githubusercontent.com/ofirgalcon/geekbench/master/benchmarks.csv" > /tmp/benchmarks.csv
+
+	srcFile="/tmp/mr-benchmarks-raw"
+	dstFile="/tmp/mr-benchmarks"
+
+	curl -s "https://browser.geekbench.com/mac-benchmarks.json" > $srcFile.json
+	cp $srcFile.json $dstFile.json
+	
+	sed -i -e 's/\"id\"\://g'  $dstFile.json
+	sed -i -e 's/\"name\"\://g'  $dstFile.json
+	sed -i -e 's/\"description\"\://g'  $dstFile.json
+	sed -i -e 's/\"samples\"\://g'  $dstFile.json
+	sed -i -e 's/\"score\"\://g'  $dstFile.json
+	sed -i -e 's/\"multicore_score\"\://g'  $dstFile.json
+	sed -i -e 's/\"icon\"\://g'  $dstFile.json
+	sed -i -e 's/\"family\"\://g'  $dstFile.json
+	sed -i -e 's/\"//g'  $dstFile.json
+	sed -i -e 's/\n//g'  $dstFile.json
+	sed -i -e 's/devices\://g'  $dstFile.json
+	sed -i -e 's/\[//g'  $dstFile.json
+	sed -i -e 's/\]//g'  $dstFile.json
+	cat $dstFile.json | xargs | sed "s/\n //g" > $dstFile-a.csv
+	cat $dstFile-a.csv | xargs | sed "s/[}]/\ /g" > $dstFile-b.csv
+	cat $dstFile-b.csv | tr "{" "\n" > $dstFile.csv
+	
 	cpuname="$(sysctl -n machdep.cpu.brand_string)"
 	cpuname="${cpuname//Intel(R)/}"
 	cpuname="${cpuname//Core(TM)2/}"
@@ -34,19 +57,21 @@ if [ "$geekbenchText" == "" ] ; then
 	cpuname="${cpuname//Core(TM)/}"
 	cpuname="$(echo $cpuname | awk -F "@" '{print $1}')"
 	cpuname="${cpuname%"${cpuname##*[![:space:]]}"}"   
-
 	cpuspeed="$(sysctl -n machdep.cpu.brand_string | awk -F "@" '{print $2}')"
 	cleanspeed=$(printf "%.1f\n" ${cpuspeed::+5})
 	cpu="$cpuname @ $cleanspeed"
 	model="$(system_profiler SPHardwareDataType | grep "Model Name" | awk -F ": " '{print $2}')"
-	score=$(cat /tmp/benchmarks.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $5}')
+
+	score=$(cat $dstFile.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $5}')
 	score=$(echo $score  | awk '{print $1}')
 	score=$(perl -e 'print sprintf "% 6s\n",shift' $score)
-	multiscore=$(cat /tmp/benchmarks.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $6}')
+	multiscore=$(cat $dstFile.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $6}')
 	multiscore=$(echo $multiscore  | awk '{print $1}')
 	multiscore=$(perl -e 'print sprintf "% 6s\n",shift' $multiscore)
-	defaults write /usr/local/munki/preflight.d/cache/geekbench.plist score "$score"
-	defaults write /usr/local/munki/preflight.d/cache/geekbench.plist multiscore "$multiscore"
+	defaults write $geekbenchStats score "$score"
+	defaults write $geekbenchStats multiscore "$multiscore"
+	rm $dstFile*
+
 fi
 	
 
