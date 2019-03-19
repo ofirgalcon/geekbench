@@ -2,7 +2,7 @@
 
 MODULE_NAME="geekbench"
 MODULESCRIPT="geekbench"
-PREF_FILE="/usr/local/munki/preflight.d/cache/geekbench.plist"
+PREF_FILE="/usr/local/munki/preflight.d/cache/geekbench.txt"
 
 CTL="${BASEURL}index.php?/module/${MODULE_NAME}/"
 
