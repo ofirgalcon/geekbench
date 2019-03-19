@@ -1,14 +1,5 @@
-#!/bin/bash
-
-CWD=$(dirname $0)
-CACHEDIR="$CWD/cache"
-geekbenchStats="$CACHEDIR/geekbench.plist"
-
-#echo "$CACHEDIR"
-#echo "$geekbenchStats"
-# Make sure ard pref exists
-#defaults read "$geekbenchStats" > /dev/null 2>&1 || defaults write "$geekbenchStats" MR created
-
+#!/bin/sh
+# Check the warranty once a day
 
 # Skip manual check
 if [ "$1" = 'manualcheck' ]; then
@@ -16,67 +7,35 @@ if [ "$1" = 'manualcheck' ]; then
 	exit 0
 fi
 
-# Create cache dir if it does not exist
-mkdir -p "${CACHEDIR}"
+# Seconds between checks
+CHECK=860000
 
-# Business logic goes here
+# Make sure the cache directory exists
+DIR=$(dirname $0)
+mkdir -p "$DIR/cache"
 
-geekbenchLastRun="$(defaults read /usr/local/munki/preflight.d/cache/geekbench.plist LastRun)" > /dev/null 2>&1 
-TimeNow=`date +%s`
-TimeSince=$((TimeNow-geekbenchLastRun))
+# Check if geekbench.txt exists
+if [ -e "$DIR/cache/geekbench.txt" ]; then
 
-if (( $TimeSince > 860000 )) ; then
+	# Get current time
+	TIME=$(date +%s)
 
-	srcFile="/tmp/mr-benchmarks-raw"
-	dstFile="/tmp/mr-benchmarks"
+	# Get file modified time
+	FILEMTIME=$(stat -f "%Sm" -t "%s" "$DIR/cache/geekbench.txt")
 
-	curl -s "https://browser.geekbench.com/mac-benchmarks.json" > $srcFile.json
-	cp $srcFile.json $dstFile.json
+	# Calculate the difference in seconds
+	DIFF=$(( $TIME - $FILEMTIME ))
+
+	if [ $DIFF -gt $CHECK ]; then
+		# Store date in file
+		date > "$DIR/cache/geekbench.txt"
+	fi
+
+else
+
+	# Store date in file
+	date > "$DIR/cache/geekbench.txt"
 	
-	sed -i -e 's/\"id\"\://g'  $dstFile.json
-	sed -i -e 's/\"name\"\://g'  $dstFile.json
-	sed -i -e 's/\"description\"\://g'  $dstFile.json
-	sed -i -e 's/\"samples\"\://g'  $dstFile.json
-	sed -i -e 's/\"score\"\://g'  $dstFile.json
-	sed -i -e 's/\"multicore_score\"\://g'  $dstFile.json
-	sed -i -e 's/\"icon\"\://g'  $dstFile.json
-	sed -i -e 's/\"family\"\://g'  $dstFile.json
-	sed -i -e 's/\"//g'  $dstFile.json
-	sed -i -e 's/\n//g'  $dstFile.json
-	sed -i -e 's/devices\://g'  $dstFile.json
-	sed -i -e 's/\[//g'  $dstFile.json
-	sed -i -e 's/\]//g'  $dstFile.json
-	cat $dstFile.json | xargs | sed "s/\n //g" > $dstFile-a.csv
-	cat $dstFile-a.csv | xargs | sed "s/[}]/\ /g" > $dstFile-b.csv
-	cat $dstFile-b.csv | tr "{" "\n" > $dstFile.csv
-	
-	cpuname="$(sysctl -n machdep.cpu.brand_string)"
-	cpuname="${cpuname//Intel(R)/}"
-	cpuname="${cpuname//Core(TM)2/}"
-	cpuname="${cpuname//CPU/}"
-	cpuname="${cpuname//Xeon(R)/}"
-	cpuname="${cpuname//Duo/}"
-	cpuname="${cpuname//Core(TM)/}"
-	cpuname="$(echo $cpuname | awk -F "@" '{print $1}')"
-	cpuname="${cpuname%"${cpuname##*[![:space:]]}"}"   
-	cpuspeed="$(sysctl -n machdep.cpu.brand_string | awk -F "@" '{print $2}')"
-	cleanspeed=$(printf "%.1f\n" ${cpuspeed::+5})
-	cpu="$cpuname @ $cleanspeed"
-	model="$(system_profiler SPHardwareDataType | grep "Model Name" | awk -F ": " '{print $2}')"
-
-	score=$(cat $dstFile.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $5}')
-	score=$(echo $score  | awk '{print $1}')
-	score=$(perl -e 'print sprintf "% 6s\n",shift' $score)
-	multiscore=$(cat $dstFile.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $6}')
-	multiscore=$(echo $multiscore  | awk '{print $1}')
-	multiscore=$(perl -e 'print sprintf "% 6s\n",shift' $multiscore)
-	defaults write $geekbenchStats score "$score"
-	defaults write $geekbenchStats multiscore "$multiscore"
-	defaults write $geekbenchStats LastRun $(date +%s)
-	rm $dstFile*
-
 fi
-	
 
-# Selfdestruct
-# rm -f "${0}"
+exit 0

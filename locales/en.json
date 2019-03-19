@@ -1,10 +1,14 @@
 {
     "geekbench": "Geekbench",
+    "geekbench_desc": "Geekbench CPU Info",
+    "geekbench_name": "Geekbench Model Name",
+    "processing": "Processing",
+    "recheck": "Pull Geekbench Scores",
     "listing": {
         "score": "Single CPU",
         "multiscore": "Multi CPU",
-        "title": "Geekbench",
-    	"gcpu": "CPU",
-    	"physical_memory": "Memory"
+        "physical_memory": "Memory",
+        "title": "Geekbench Report",
+    	"samples": "Samples"
     }
 }
