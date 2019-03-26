@@ -24,6 +24,30 @@
 					<th data-i18n="geekbench.geekbench_desc"></th>
 					<td id="geekbench-description"></td>
 				</tr>
+				<tr>
+					<th data-i18n="geekbench.listing.gpu_name"></th>
+					<td id="geekbench-gpu_name"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.listing.opencl_score"></th>
+					<td id="geekbench-opencl_score"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.listing.opencl_samples"></th>
+					<td id="geekbench-opencl_samples"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.listing.cuda_score"></th>
+					<td id="geekbench-cuda_score"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.listing.cuda_samples"></th>
+					<td id="geekbench-cuda_samples"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.listing.last_cache_pull"></th>
+					<td id="geekbench-last_cache_pull"></td>
+				</tr>
 			</table>
 		</div>
 	</div>
@@ -48,6 +72,21 @@ $(document).on('appReady', function(e, lang) {
 			$('#geekbench-samples').text(data.samples);
 			$('#geekbench-model_name').text(data.model_name);
 			$('#geekbench-description').text(data.description);
+			$('#geekbench-cuda_score').text(data.cuda_score);
+			$('#geekbench-cuda_samples').text(data.cuda_samples);
+			$('#geekbench-opencl_score').text(data.opencl_score);
+			$('#geekbench-opencl_samples').text(data.opencl_samples);
+			$('#geekbench-gpu_name').text(data.gpu_name);
+            
+            // Format and fill date
+            var colvar = data.last_cache_pull;
+            if(colvar !== "" && colvar.indexOf('-') === -1){
+                var date = new Date(colvar * 1000);
+                $('#geekbench-last_cache_pull').html('<span title="'+moment(date).format('llll')+'">'+moment(date).fromNow()+'</span>');
+            } else if (colvar !== ""){
+                $('#geekbench-last_cache_pull').html('<span title="' + colvar + '">' + moment(colvar).fromNow()+'</span>');   
+            }
+            
 		}
 	});
 });
