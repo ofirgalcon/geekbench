@@ -19,14 +19,18 @@ new Geekbench_model;
 		        <th data-i18n="geekbench.listing.score" data-colname='geekbench.score'></th>
 		        <th data-i18n="geekbench.listing.multiscore" data-colname='geekbench.multiscore'></th>
    		        <th data-i18n="geekbench.geekbench_name" data-colname='geekbench.model_name'></th>
-		        <th data-i18n="geekbench.geekbench_desc" data-colname='geekbench.description'></th>
-		        <th data-i18n="geekbench.listing.physical_memory" data-colname='machine.physical_memory'></th>
 		        <th data-i18n="geekbench.listing.samples" data-colname='geekbench.samples'></th>
+		        <th data-i18n="geekbench.listing.opencl_score" data-colname='geekbench.opencl_score'></th>
+		        <th data-i18n="geekbench.listing.opencl_samples" data-colname='geekbench.opencl_samples'></th>
+		        <th data-i18n="geekbench.listing.cuda_score" data-colname='geekbench.cuda_score'></th>
+		        <th data-i18n="geekbench.listing.cuda_samples" data-colname='geekbench.cuda_samples'></th>
+		        <th data-i18n="geekbench.listing.gpu_name" data-colname='geekbench.gpu_name'></th>
+		        <th data-i18n="geekbench.listing.last_cache_pull" data-colname='geekbench.last_cache_pull'></th>
 		      </tr>
 		    </thead>
 		    <tbody>
 		      <tr>
-		        <td data-i18n="listing.loading" colspan="9" class="dataTables_empty"></td>
+		        <td data-i18n="listing.loading" colspan="13" class="dataTables_empty"></td>
 		      </tr>
 		    </tbody>
 		  </table>
@@ -58,7 +62,7 @@ new Geekbench_model;
                 url: appUrl + '/datatables/data',
                 type: "POST", 
                 data: function(d){
-                     d.mrColNotEmpty = "score";
+                    d.mrColNotEmpty = "score";
                 }
             },
             dom: mr.dt.buttonDom,
@@ -71,9 +75,13 @@ new Geekbench_model;
 	        	var link = mr.getClientDetailLink(name, sn, '#tab_geekbench-tab');
 	        	$('td:eq(0)', nRow).html(link);
                 
-	        	// Add memory suffix
-	        	var colvar=$('td:eq(7)', nRow).html();
-	        	$('td:eq(7)', nRow).html(colvar+" GB")
+	        	var colvar = $('td:eq(12)', nRow).html();
+	        	if(colvar !== "" && colvar.indexOf('-') === -1){
+                    var date = new Date(colvar * 1000);
+                    $('td:eq(12)', nRow).html('<span title="'+moment(date).format('llll')+'">'+moment(date).fromNow()+'</span>');
+	        	} else if (colvar !== ""){
+                    $('td:eq(12)', nRow).html('<span title="' + colvar + '">' + moment(colvar).fromNow()+'</span>');   
+                }
 	        }
 	    });
 	});

@@ -6,5 +6,8 @@ return array(
     ),
     'listings' => array(
         'geekbench' => array('view' => 'geekbench_listing', 'i18n' => 'geekbench.geekbench'),
+    ),
+    'admins' => array(
+        'geekbench' => array('view' => 'geekbench_admin', 'i18n' => 'geekbench.geekbench'),
     )
 );
