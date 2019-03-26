@@ -1,10 +1,13 @@
 {
     "geekbench": "Geekbench",
+    "geekbench_desc": "Geekbench CPU Info",
+    "geekbench_name": "Geekbench Model Name",
     "listing": {
         "score": "Single CPU",
         "multiscore": "Multi CPU",
         "title": "Geekbench",
     	"gcpu": "CPU",
     	"physical_memory": "Memory"
+    	"samples": "Samples"
     }
 }

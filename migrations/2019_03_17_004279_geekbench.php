@@ -26,8 +26,8 @@ class geekbench extends Migration
         $capsule::schema()->create($this->tableName, function (Blueprint $table) {
             $table->increments('id');
             $table->string('serial_number');
-            $table->string('score');
-            $table->string('multiscore');
+            $table->integer('score');
+            $table->integer('multiscore');
         });
 
         if ($migrateData) {

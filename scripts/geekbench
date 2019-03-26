@@ -4,12 +4,6 @@ CWD=$(dirname $0)
 CACHEDIR="$CWD/cache"
 geekbenchStats="$CACHEDIR/geekbench.plist"
 
-#echo "$CACHEDIR"
-#echo "$geekbenchStats"
-# Make sure ard pref exists
-#defaults read "$geekbenchStats" > /dev/null 2>&1 || defaults write "$geekbenchStats" MR created
-
-
 # Skip manual check
 if [ "$1" = 'manualcheck' ]; then
 	echo 'Manual check: skipping'
@@ -26,6 +20,9 @@ TimeNow=`date +%s`
 TimeSince=$((TimeNow-geekbenchLastRun))
 
 if (( $TimeSince > 860000 )) ; then
+
+	#### DEBUG
+	#geekbenchStats="/Users/ofir/Desktop/geekbench.plist"
 
 	srcFile="/tmp/mr-benchmarks-raw"
 	dstFile="/tmp/mr-benchmarks"
@@ -47,7 +44,7 @@ if (( $TimeSince > 860000 )) ; then
 	sed -i -e 's/\[//g'  $dstFile.json
 	sed -i -e 's/\]//g'  $dstFile.json
 	cat $dstFile.json | xargs | sed "s/\n //g" > $dstFile-a.csv
-	cat $dstFile-a.csv | xargs | sed "s/[}]/\ /g" > $dstFile-b.csv
+	cat $dstFile-a.csv | xargs | sed "s/[}]/\ /g" | sed "s/\, /\,/g" > $dstFile-b.csv
 	cat $dstFile-b.csv | tr "{" "\n" > $dstFile.csv
 	
 	cpuname="$(sysctl -n machdep.cpu.brand_string)"
@@ -63,15 +60,18 @@ if (( $TimeSince > 860000 )) ; then
 	cleanspeed=$(printf "%.1f\n" ${cpuspeed::+5})
 	cpu="$cpuname @ $cleanspeed"
 	model="$(system_profiler SPHardwareDataType | grep "Model Name" | awk -F ": " '{print $2}')"
+	curModel="$(cat $dstFile.csv)"
+	score=$(echo "$curModel" | grep "$cpu" | grep "$model" | awk -F "," '{print $5}')
+	multiscore=$(echo "$curModel" | grep "$cpu" | grep "$model" | awk -F "," '{print $6}')
+	model_name="$(echo "$curModel" | grep "$cpu" | grep "$model" | awk -F "," '{print $2}')"
+	description="$(echo "$curModel" | grep "$cpu" | grep "$model" | awk -F "," '{print $3}')"
+	samples=$(echo "$curModel" | grep "$cpu" | grep "$model" | awk -F "," '{print $4}')
 
-	score=$(cat $dstFile.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $5}')
-	score=$(echo $score  | awk '{print $1}')
-	score=$(perl -e 'print sprintf "% 6s\n",shift' $score)
-	multiscore=$(cat $dstFile.csv | grep "$cpu" | grep "$model" | awk -F "," '{print $6}')
-	multiscore=$(echo $multiscore  | awk '{print $1}')
-	multiscore=$(perl -e 'print sprintf "% 6s\n",shift' $multiscore)
-	defaults write $geekbenchStats score "$score"
-	defaults write $geekbenchStats multiscore "$multiscore"
+	defaults write $geekbenchStats score -int $score
+	defaults write $geekbenchStats multiscore -int $multiscore
+	defaults write $geekbenchStats model_name "\"$model_name\""
+	defaults write $geekbenchStats description "\"$description\""
+	defaults write $geekbenchStats samples -int $samples
 	defaults write $geekbenchStats LastRun $(date +%s)
 	rm $dstFile*
 

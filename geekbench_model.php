@@ -12,6 +12,9 @@ class geekbench_model extends \Model
         $this->rs['serial_number'] = $serial;
         $this->rs['score'] = '';
         $this->rs['multiscore'] = '';
+        $this->rs['model_name'] = '';
+        $this->rs['description'] = '';
+        $this->rs['samples'] = '';
         
         if ($serial) {
             $this->retrieve_record($serial);
@@ -26,7 +29,7 @@ class geekbench_model extends \Model
         $parser->parse($data);
         $plist = array_change_key_case($parser->toArray(), CASE_LOWER);
 
-        foreach (array('score', 'multiscore') as $item) {
+        foreach (array('score', 'multiscore', 'model_name', 'description', 'samples') as $item) {
             if (isset($plist[$item])) {
                 $this->$item = $plist[$item];
             } else {
