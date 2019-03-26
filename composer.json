@@ -1,1 +1,5 @@
-{"require":{"php":"^7.0"},"license":"MIT","name 2":"ofirgalcon/geekbench","name":"munkireport/geekbench","description":"Geekbench module for munkireport."}
+{
+    "name": "munkireport/geekbench",
+    "description": "Module for munkireport.",
+    "license": "MIT"
+}

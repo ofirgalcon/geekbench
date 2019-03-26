@@ -6,7 +6,7 @@
  * @package munkireport
  * @author AvB
  **/
-class Geekbench_controller extends Module_controller
+class geekbench_controller extends Module_controller
 {
     public function __construct()
     {
@@ -22,28 +22,6 @@ class Geekbench_controller extends Module_controller
     {
         echo "You've loaded the geekbench module!";
     }
-    
-    /**
-     * Force data pull from Geekbench
-     *
-     * @return void
-     * @author tuxudo
-     **/
-    public function recheck_geekbench($serial = '')
-    {
-        // Authenticate
-        if (! $this->authorized()) {
-            die('Authenticate first.'); // Todo: return json?
-        }
-        // Load model and lookup scores
-        if (authorized_for_serial($serial)) {
-            $geekbench = new Geekbench_model($serial);
-            $geekbench->process();
-        }
-        
-        // Send people back to the client tab once scores are pulled
-        redirect("clients/detail/$serial#tab_geekbench-tab");
-    }
 
     /**
      * Retrieve data in json format
@@ -58,7 +36,7 @@ class Geekbench_controller extends Module_controller
             return;
         }
 
-        $geekbench = new Geekbench_model($serial_number);
+        $geekbench = new geekbench_model($serial_number);
         $obj->view('json', array('msg' => $geekbench->rs));
     }
-} // END class Geekbench_controller
+} // END class geekbench_controller
