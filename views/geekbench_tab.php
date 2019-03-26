@@ -2,7 +2,7 @@
 
 <div id="geekbench-msg" data-i18n="listing.loading" class="col-lg-12 text-center"></div>
 	<div id="geekbench-view" class="row hide">
-		<div class="col-md-3">
+		<div class="col-md-5">
 			<table class="table table-striped">
 				<tr>
 					<th data-i18n="geekbench.listing.score"></th>
