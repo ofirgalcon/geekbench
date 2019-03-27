@@ -20,8 +20,8 @@ def check_run_time(cache_file):
 
     # Check if key exists
     if 'last_run' in out:
-        if current_time > int(out["last_run"])+860000:
-            last_run = str(int(out["last_run"])+860000)
+        if current_time > int(out["last_run"])+604000:
+            last_run = str(int(out["last_run"])+604000)
         else:
             last_run = str(current_time)
     else:

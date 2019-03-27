@@ -9,20 +9,20 @@ class Geekbench_model extends \Model
         parent::__construct('id', 'geekbench'); // Primary key, tablename
         $this->rs['id'] = 0;
         $this->rs['serial_number'] = $serial;
-        $this->rs['score'] = '';
-        $this->rs['multiscore'] = '';
-        $this->rs['model_name'] = '';
-        $this->rs['description'] = '';
-        $this->rs['samples'] = '';
+        $this->rs['score'] = null;
+        $this->rs['multiscore'] = null;
+        $this->rs['model_name'] = null;
+        $this->rs['description'] = null;
+        $this->rs['samples'] = null;
         $this->rs['cuda_score'] = null;
         $this->rs['cuda_samples'] = null;
         $this->rs['opencl_score'] = null;
         $this->rs['opencl_samples'] = null;
         $this->rs['gpu_name'] = null;
         $this->rs['last_cache_pull'] = null;
-        $this->rs['mac_benchmarks'] = '';
-        $this->rs['cuda_benchmarks'] = '';
-        $this->rs['opencl_benchmarks'] = '';
+        $this->rs['mac_benchmarks'] = null;
+        $this->rs['cuda_benchmarks'] = null;
+        $this->rs['opencl_benchmarks'] = null;
 
         if ($serial) {
             $this->retrieve_record($serial);
@@ -110,10 +110,12 @@ class Geekbench_model extends \Model
         // Prepare machine description for matching
         $desc_array = explode("(", $machine_desc);
         if ( count($desc_array) > 1){
-            $machine_desc = preg_replace("/[^A-Za-z0-9]/", '', $desc_array[0]).preg_replace("/[^0-9]/", '', $desc_array[1]);
+            // Extract model year and append to machine model
+            $machine_year = explode(" ", preg_replace("/[^0-9 ]/", '', $desc_array[1]));
+            $machine_desc = preg_replace("/[^A-Za-z0-9]/", '', str_replace(array('Server'), array(''), $desc_array[0])).end($machine_year);
         } else {
-            $machine_desc = preg_replace("/[^A-Za-z0-9]/", '', $desc_array[0]);
-        }
+            $machine_desc = preg_replace("/[^A-Za-z0-9]/", '', str_replace(array('Server'), array(''), $desc_array[0]));
+        }        
 
         // Loop through all benchmarks until match is found
         foreach($benchmarks->devices as $benchmark){
@@ -121,7 +123,9 @@ class Geekbench_model extends \Model
             // Prepare benchmark name for matching
             $name_array = explode("(", $benchmark->name);
             if ( count($name_array) > 1){
-                $benchmark_name = preg_replace("/[^A-Za-z0-9]/", '', $name_array[0]).preg_replace("/[^0-9]/", '', $name_array[1]);
+                // Extract model year and append to machine model
+                $machine_year = explode(" ", preg_replace("/[^0-9 ]/", '', $name_array[1]));
+                $benchmark_name = preg_replace("/[^A-Za-z0-9]/", '', $name_array[0]).end($machine_year);
             } else {
                 $benchmark_name = preg_replace("/[^A-Za-z0-9]/", '', $name_array[0]);
             }
@@ -131,6 +135,7 @@ class Geekbench_model extends \Model
 
             // Check through for a matching machine description and CPU
             if ($benchmark_name == $machine_desc && $benchmark_cpu == $machine_cpu){
+
                 // Fill in data from matching entry
                 $this->score = $benchmark->score;
                 $this->multiscore = $benchmark->multicore_score;
@@ -142,16 +147,20 @@ class Geekbench_model extends \Model
                 break;
             }
         }
-        
+
         // Insert last ran timestamp, may be overwritten by $data
         $this->last_cache_pull = time();
 
         $gpu_model = "";
-        
-        // Check if we have data so we can process GPU
+
+        // Fill in GPU information
+        // If we don't have data, use existing GPU model
         if ($data == "" && !is_null($this->rs["gpu_name"])){
-            // If we don't have data, use existing GPU model
             $gpu_model = $this->rs["gpu_name"];
+        } else if ($data == "" && is_null($this->rs["gpu_name"])){
+            // Try to get GPU model from gpu module
+            $gpu = new Gpu_model($this->serial_number);        
+            $gpu_model = $gpu->rs["model"];
         }
 
         // If we have data or gpu_model is already set
@@ -169,18 +178,15 @@ class Geekbench_model extends \Model
                 // Insert last ran timestamp
                 $this->last_cache_pull = $plist["last_run"];
             }
-            
-            
-            $this->gpu_name = $gpu_model;
+
+            // Clean GPU model
+            $this->gpu_name = str_replace(array('NVIDIA ','Intel ','HD Graphics 3000'), array('','','HD Graphics'), $gpu_model);
 
             // Loop through all GPU CUDA benchmarks until match is found
             foreach($gpu_cuda_benchmarks->devices as $gpu_cuda_benchmark){
 
-                // Prepare gpu model for matching
-                $gpu_cuda_benchmark_prepared = str_replace(array('(R)'), array(''), $gpu_cuda_benchmark->name);
-
                 // Check through for a matching GPU
-                if ($gpu_cuda_benchmark_prepared == $gpu_model){
+                if ($gpu_cuda_benchmark->name == $this->gpu_name){
 
                     // Fill in data from matching entry
                     $this->cuda_samples = $gpu_cuda_benchmark->samples;
@@ -193,10 +199,12 @@ class Geekbench_model extends \Model
 
             // Loop through all GPU OpenCL benchmarks until match is found
             foreach($gpu_opencl_benchmarks->devices as $gpu_opencl_benchmark){
+                
+                // Prepare gpu model for matching
+                $gpu_opencl_benchmark_prepared = str_replace(array('NVIDIA ','(R)','(TM)','Intel '), array('','','',''), $gpu_opencl_benchmark->name);
 
                 // Check through for a matching GPU
-                if ($gpu_opencl_benchmark->name == $gpu_model){
-
+                if ($gpu_opencl_benchmark_prepared == $this->gpu_name){
                     // Fill in data from matching entry
                     $this->opencl_samples = $gpu_opencl_benchmark->samples;
                     $this->opencl_score = $gpu_opencl_benchmark->score;
