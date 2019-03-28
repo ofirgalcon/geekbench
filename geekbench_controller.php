@@ -118,7 +118,7 @@ class Geekbench_controller extends Module_controller
             if (strpos($machine->rs["machine_desc"], 'virtual machine') !== false){
                 $out = array("serial"=>$incoming_serial,"status"=>"Virtual machine skipped");
                 $obj->view('json', array('msg' => $out));
-            } else if ($machine->rs["machine_desc"] == ""){
+            } else if ($machine->rs["machine_model"] == ""){
                 $out = array("serial"=>$incoming_serial,"status"=>"Skipping machine, does not exist");
                 $obj->view('json', array('msg' => $out));
             } else {
