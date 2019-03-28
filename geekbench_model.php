@@ -120,7 +120,7 @@ class Geekbench_model extends \Model
             }
             // Check if machine name contains year
             if (strpos($machine_desc, ' 20') !== false) {
-                $machine_year = "20".preg_replace("/[^0-9]/", '', explode(" 20", $desc_array[1])[1]);
+                $machine_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", $desc_array[1])[1])[0]);
             } else {
                 $machine_year = "";
             }
@@ -149,7 +149,7 @@ class Geekbench_model extends \Model
                 }
                 // Check if benchmark name contains year
                 if (strpos($benchmark->name, ' 20') !== false) {
-                    $benchmark_year = "20".preg_replace("/[^0-9]/", '', explode(" 20", $name_array[1])[1]);
+                    $benchmark_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", $name_array[1])[1])[0]);
                 } else {
                     $benchmark_year = "";
                 }
