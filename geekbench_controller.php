@@ -112,11 +112,21 @@ class Geekbench_controller extends Module_controller
             }
             $obj->view('json', array('msg' => $out));
         } else {
-            $geekbench = new Geekbench_model($incoming_serial);
-            $geekbench_status = $geekbench->process();
-
-            $out = array("serial"=>$incoming_serial,"status"=>"Machine processed");
-            $obj->view('json', array('msg' => $out));
+            
+            // Check if machine is a virutal machine
+            $machine = new Machine_model($incoming_serial);
+            if (strpos($machine->rs["machine_desc"], 'virtual machine') !== false){
+                $out = array("serial"=>$incoming_serial,"status"=>"Virtual machine skipped");
+                $obj->view('json', array('msg' => $out));
+            } else if ($machine->rs["machine_desc"] == ""){
+                $out = array("serial"=>$incoming_serial,"status"=>"Skipping machine, does not exist");
+                $obj->view('json', array('msg' => $out));
+            } else {
+                $geekbench = new Geekbench_model($incoming_serial);
+                $geekbench_status = $geekbench->process();
+                $out = array("serial"=>$incoming_serial,"status"=>"Machine processed");
+                $obj->view('json', array('msg' => $out));
+            }
         }
     }
     

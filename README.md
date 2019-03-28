@@ -6,11 +6,6 @@ Reports the Geekbench stats for the computer.
 Client will trigger server to lookup Geekbench information from Geekbench's API once a week.
 
 
-Remarks
----
-The admin tab may not always complete. This is a known bug and will not be fixed at this time. 
-
-
 Table Schema
 ---
 * id - Unique ID
