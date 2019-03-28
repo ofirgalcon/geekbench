@@ -46,7 +46,7 @@ class Geekbench_model extends \Model
         $machine_cpu = $machine->rs["cpu"];
 
         // Check if machine is a virutal machine
-        if (strpos($machine_desc, 'virtual machine') !== false){
+        if (strpos($machine_desc, 'virtual machine') !== false || strpos($machine->rs["machine_model"], 'VMware') !== false){
             print_r("Geekbench module does not support virtual machines, exiting");
             exit(0);
         }

@@ -115,7 +115,7 @@ class Geekbench_controller extends Module_controller
             
             // Check if machine is a virutal machine
             $machine = new Machine_model($incoming_serial);
-            if (strpos($machine->rs["machine_desc"], 'virtual machine') !== false){
+            if (strpos($machine->rs["machine_desc"], 'virtual machine') !== false || strpos($machine->rs["machine_model"], 'VMware') !== false){
                 $out = array("serial"=>$incoming_serial,"status"=>"Virtual machine skipped");
                 $obj->view('json', array('msg' => $out));
             } else if ($machine->rs["machine_model"] == ""){
