@@ -42,11 +42,11 @@ class Geekbench_model extends \Model
 
         // Get machine machine_desc and CPU from machine table
         $machine = new Machine_model($this->serial_number);        
-        $machine_desc = $machine->rs["machine_desc"];
+        $machine_desc = str_replace(array("Server"),array(""), $machine->rs["machine_desc"]);
         $machine_cpu = $machine->rs["cpu"];
 
         // Check if machine is a virutal machine
-        if (strpos($machine_desc, 'virtual machine') !== false){
+        if (strpos($machine_desc, 'virtual machine') !== false || strpos($machine->rs["machine_model"], 'VMware') !== false){
             print_r("Geekbench module does not support virtual machines, exiting");
             exit(0);
         }
@@ -110,12 +110,28 @@ class Geekbench_model extends \Model
         // Prepare machine description for matching
         $desc_array = explode("(", $machine_desc);
         if ( count($desc_array) > 1){
-            // Extract model year and append to machine model
-            $machine_year = explode(" ", preg_replace("/[^0-9 ]/", '', $desc_array[1]));
-            $machine_desc = preg_replace("/[^A-Za-z0-9]/", '', str_replace(array('Server'), array(''), $desc_array[0])).end($machine_year);
+            // Extract model, inch, and year
+            $machine_name = preg_replace("/[^A-Za-z]/", '', str_replace(array('Server'), array(''), $desc_array[0]));
+            // Check if machine name contains inch
+            if (strpos($machine_desc, '-inch') !== false) {
+                $machine_inch = preg_replace("/[^0-9]/", '', explode("-inch", $desc_array[1])[0]);
+            } else {
+                $machine_inch = "";
+            }
+            // Check if machine name contains year
+            if (strpos($machine_desc, ' 20') !== false) {
+                $machine_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", $desc_array[1])[1])[0]);
+            } else {
+                $machine_year = "";
+            }
         } else {
-            $machine_desc = preg_replace("/[^A-Za-z0-9]/", '', str_replace(array('Server'), array(''), $desc_array[0]));
-        }        
+            // Fix 2006 Mac Pro or other machines without a year in their name
+            $machine_name = preg_replace("/[^A-Za-z]/", '', str_replace(array('Server'), array(''), $desc_array[0]));
+            $machine_inch = "";
+            $machine_year = "";
+        }
+
+        $machine_match = ($machine_name.$machine_inch.$machine_year);
 
         // Loop through all benchmarks until match is found
         foreach($benchmarks->devices as $benchmark){
@@ -123,18 +139,34 @@ class Geekbench_model extends \Model
             // Prepare benchmark name for matching
             $name_array = explode("(", $benchmark->name);
             if ( count($name_array) > 1){
-                // Extract model year and append to machine model
-                $machine_year = explode(" ", preg_replace("/[^0-9 ]/", '', $name_array[1]));
-                $benchmark_name = preg_replace("/[^A-Za-z0-9]/", '', $name_array[0]).end($machine_year);
+            // Extract model, inch, and year
+                $benchmark_desc = preg_replace("/[^A-Za-z]/", '', str_replace(array('Server'), array(''), $name_array[0]));
+                // Check if benchmark name contains inch
+                if (strpos($benchmark->name, '-inch') !== false) {
+                    $benchmark_inch = preg_replace("/[^0-9]/", '', explode("-inch", $name_array[1])[0]);
+                } else {
+                    $benchmark_inch = "";
+                }
+                // Check if benchmark name contains year
+                if (strpos($benchmark->name, ' 20') !== false) {
+                    $benchmark_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", $name_array[1])[1])[0]);
+                } else {
+                    $benchmark_year = "";
+                }
             } else {
-                $benchmark_name = preg_replace("/[^A-Za-z0-9]/", '', $name_array[0]);
+                // Fix 2006 Mac Pro or other machines without a year in their name
+                $benchmark_desc = preg_replace("/[^A-Za-z]/", '', str_replace(array('Server'), array(''), $name_array[0]));
+                $benchmark_inch = "";
+                $benchmark_year = "";
             }
+
+            $benchmark_match = ($benchmark_desc.$benchmark_inch.$benchmark_year);
 
             // Process benchmark CPU for matching
             $benchmark_cpu = preg_replace("/[^A-Za-z0-9]/", '', explode("@", $benchmark->description)[0]);
 
             // Check through for a matching machine description and CPU
-            if ($benchmark_name == $machine_desc && $benchmark_cpu == $machine_cpu){
+            if ($benchmark_match == $machine_match && $benchmark_cpu == $machine_cpu){
 
                 // Fill in data from matching entry
                 $this->score = $benchmark->score;
