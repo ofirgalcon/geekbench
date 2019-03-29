@@ -91,7 +91,7 @@ class Geekbench_controller extends Module_controller
             $obj->view('json', array('msg' => array('error' => 'Not authenticated')));
             return;
         }
-        
+
         // Check if we are returning a list of all serials or processing a serial
         // Returns either a list of all serial numbers in MunkiReport OR
         // a JSON of what serial number was just ran with the status of the run
@@ -112,24 +112,30 @@ class Geekbench_controller extends Module_controller
             }
             $obj->view('json', array('msg' => $out));
         } else {
-            
+
             // Check if machine is a virutal machine
             $machine = new Machine_model($incoming_serial);
             if (strpos($machine->rs["machine_desc"], 'virtual machine') !== false || strpos($machine->rs["machine_model"], 'VMware') !== false){
                 $out = array("serial"=>$incoming_serial,"status"=>"Virtual machine skipped");
                 $obj->view('json', array('msg' => $out));
-            } else if ($machine->rs["machine_model"] == ""){
+            } else if ($machine->rs["machine_model"] == "" || $machine->rs["machine_model"] == null){
                 $out = array("serial"=>$incoming_serial,"status"=>"Skipping machine, does not exist");
                 $obj->view('json', array('msg' => $out));
             } else {
                 $geekbench = new Geekbench_model($incoming_serial);
                 $geekbench_status = $geekbench->process();
-                $out = array("serial"=>$incoming_serial,"status"=>"Machine processed");
-                $obj->view('json', array('msg' => $out));
+                // Check if machine matched
+                if ($geekbench->rs["score"] == "" || $geekbench->rs["score"] == null){
+                    $out = array("serial"=>$incoming_serial,"status"=>"Machine not matched");
+                    $obj->view('json', array('msg' => $out));
+                } else {
+                    $out = array("serial"=>$incoming_serial,"status"=>"Machine processed");
+                    $obj->view('json', array('msg' => $out));
+                }
             }
         }
     }
-    
+
     /**
      * Force data pull from Geekbench
      *

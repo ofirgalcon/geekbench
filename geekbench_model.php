@@ -103,9 +103,14 @@ class Geekbench_model extends \Model
         $benchmarks = json_decode($cached_jsons[0]->mac_benchmarks);
         $gpu_cuda_benchmarks = json_decode($cached_jsons[0]->cuda_benchmarks);
         $gpu_opencl_benchmarks = json_decode($cached_jsons[0]->opencl_benchmarks);
-        
+
         // Prepare machine CPU type string for matching
         $machine_cpu = preg_replace("/[^A-Za-z0-9]/", '', explode("@", str_replace(array('(R)','CPU ','(TM)2','(TM)','Core2'), array('','',' 2','','Core 2'), $machine_cpu))[0]);
+        
+        // Fix older Macbooks
+        if(strpos($machine_desc, 'MacBook (13-inch, ') !== false){
+            $machine_desc = str_replace(array('13-inch, '), array(''), $machine_desc);
+        }
 
         // Prepare machine description for matching
         $desc_array = explode("(", $machine_desc);
@@ -114,13 +119,13 @@ class Geekbench_model extends \Model
             $machine_name = preg_replace("/[^A-Za-z]/", '', str_replace(array('Server'), array(''), $desc_array[0]));
             // Check if machine name contains inch
             if (strpos($machine_desc, '-inch') !== false) {
-                $machine_inch = preg_replace("/[^0-9]/", '', explode("-inch", $desc_array[1])[0]);
+                $machine_inch = preg_replace("/[^0-9]/", '', explode("-inch", str_replace(array('5K'), array(''), $desc_array[1]))[0]);
             } else {
                 $machine_inch = "";
             }
             // Check if machine name contains year
             if (strpos($machine_desc, ' 20') !== false) {
-                $machine_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", $desc_array[1])[1])[0]);
+                $machine_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", str_replace(array('5K'), array(''), $desc_array[1]))[1])[0]);
             } else {
                 $machine_year = "";
             }
@@ -132,6 +137,8 @@ class Geekbench_model extends \Model
         }
 
         $machine_match = ($machine_name.$machine_inch.$machine_year);
+        
+        $did_match = false;
 
         // Loop through all benchmarks until match is found
         foreach($benchmarks->devices as $benchmark){
@@ -144,9 +151,20 @@ class Geekbench_model extends \Model
                 // Check if benchmark name contains inch
                 if (strpos($benchmark->name, '-inch') !== false) {
                     $benchmark_inch = preg_replace("/[^0-9]/", '', explode("-inch", $name_array[1])[0]);
+                    // Fix for 27" 5K 2014 iMac, 2013 Macbook Air, 2012 iMac
+                    if ($benchmark->name == 'iMac (27-inch Retina)'){
+                        $benchmark->name = 'iMac (Retina 27-inch Late 2014)';
+                        $name_array = explode("(", $benchmark->name);
+                    } else if($benchmark->name == "MacBook Air (11-inch Mid 2013)" && strpos($benchmark->description, '4650U') !== false){
+                        $benchmark->name = "MacBook Air (11-inch Early 2014)";
+                        $name_array = explode("(", $benchmark->name);
+                    } else if ($benchmark->name == "iMac (21.5-inch Late 2012)" && strpos($benchmark->description, '3335S') !== false){
+                        $benchmark->description = str_replace(array('3335S'), array('3330S'), $benchmark->description);
+                    }
                 } else {
                     $benchmark_inch = "";
                 }
+
                 // Check if benchmark name contains year
                 if (strpos($benchmark->name, ' 20') !== false) {
                     $benchmark_year = "20".preg_replace("/[^0-9]/", '', explode(", ", explode(" 20", $name_array[1])[1])[0]);
@@ -167,14 +185,16 @@ class Geekbench_model extends \Model
 
             // Check through for a matching machine description and CPU
             if ($benchmark_match == $machine_match && $benchmark_cpu == $machine_cpu){
-
+                
                 // Fill in data from matching entry
                 $this->score = $benchmark->score;
                 $this->multiscore = $benchmark->multicore_score;
                 $this->model_name = $benchmark->name;
                 $this->description = $benchmark->description;
                 $this->samples = $benchmark->samples;
-
+                
+                $did_match = true;
+                
                 // Exit loop because we found a match
                 break;
             }
@@ -246,9 +266,11 @@ class Geekbench_model extends \Model
                 }
             }
         }
-
-        // Save the data
-        $this->save();
+        
+        // Save the data if matched
+        if($did_match){
+            $this->save();
+        }
     }
 }
 
