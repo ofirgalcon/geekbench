@@ -10,6 +10,7 @@
         </div>
         <br id="Progress-Space" class="hide">
         <div id="Geekbench-System-Status"></div>
+        <div id="Geekbench-Match-Errors"></div>
     </div>
 </div>  <!-- /container -->
 
@@ -69,6 +70,10 @@ $(document).on('appReady', function(e, lang) {
             for (var serialindex = 0; serialindex < progressmax; serialindex++) {
                 // Get JSON for each serial number
                 $.getJSON(appUrl + '/module/geekbench/pull_all_geekbench_data/'+processdata[serialindex], function (resultdata) {
+                    // Check if machine was properly processed
+                    if (!resultdata['status'].includes("Machine processed")){
+                        $('#Geekbench-Match-Errors').append("<br>"+resultdata['status']+" -- "+resultdata['serial'])
+                    }
                     
                     // Calculate progress bar's percent
                     var processpercent = Math.round((((progessvalue+1)/progressmax)*100));
