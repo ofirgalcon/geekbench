@@ -20,7 +20,4 @@ Table Schema
 * opencl_score - bigint - Score for OpenCL
 * opencl_samples - bigint - How many samples are in Geekbench
 * gpu_name - string - Name of the GPU that is matched
-* last_cache_pull - bigint - Timestamp of when cache files were last updated or when scores were last entered for machine
-* mac_benchmarks - mediumtext - JSON string containing benchmarks for Macs
-* cuda_benchmarks - mediumtext - JSON string containing CUDA benchmarks
-* opencl_benchmarks - mediumtext - JSON string containing OpenCL benchmarks
+* last_run - bigint - Timestamp of when scores were last processed for machine

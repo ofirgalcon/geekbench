@@ -1,6 +1,7 @@
 <?php
 
 use CFPropertyList\CFPropertyList;
+use munkireport\lib\Request;
 
 class Geekbench_model extends \Model
 {
@@ -19,10 +20,7 @@ class Geekbench_model extends \Model
         $this->rs['opencl_score'] = null;
         $this->rs['opencl_samples'] = null;
         $this->rs['gpu_name'] = null;
-        $this->rs['last_cache_pull'] = null;
-        $this->rs['mac_benchmarks'] = null;
-        $this->rs['cuda_benchmarks'] = null;
-        $this->rs['opencl_benchmarks'] = null;
+        $this->rs['last_run'] = null;
 
         if ($serial) {
             $this->retrieve_record($serial);
@@ -39,53 +37,53 @@ class Geekbench_model extends \Model
      **/
     public function process($data = '')
     {
-
         // Get machine machine_desc and CPU from machine table
-        $machine = new Machine_model($this->serial_number);        
-        $machine_desc = str_replace(array("Server"),array(""), $machine->rs["machine_desc"]);
-        $machine_cpu = $machine->rs["cpu"];
+        $queryobj = new Geekbench_model();
+        $sql = "SELECT machine_desc, machine_model, cpu FROM `machine` WHERE serial_number = '".$this->serial_number."'";
+        $machine_data = $queryobj->query($sql);
+        $machine_desc = $machine_data[0]->machine_desc;
+        $machine_cpu = $machine_data[0]->cpu;
+        $machine_model = $machine_data[0]->machine_model;
 
         // Check if machine is a virutal machine
-        if (strpos($machine_desc, 'virtual machine') !== false || strpos($machine->rs["machine_model"], 'VMware') !== false){
+        if (strpos($machine_desc, 'virtual machine') !== false || strpos($machine_model, 'VMware') !== false){
             print_r("Geekbench module does not support virtual machines, exiting");
             exit(0);
         }
 
         // Check if we have cached Geekbench JSONs
-        $queryobj = new Geekbench_model();
-        $sql = "SELECT last_cache_pull FROM `geekbench` WHERE serial_number = 'JSON_CACHE_DATA'";
-        $cached_data = $queryobj->query($sql);
+        $last_cache_pull = munkireport\models\Cache::select('value')->where('module', 'geekbench')->where('property', 'last_cache_pull')->value('value');
 
         // Get the current time
         $current_time = time();
 
         // Check if we have a result or a week has passed
-        if($cached_data == null || ($current_time > ($cached_data[0]->last_cache_pull + 604800))){
+        if($last_cache_pull == null || ($current_time > ($last_cache_pull + 604800))){
 
             // Get JSONs from Geekbench API
-            ini_set("allow_url_fopen", 1);
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_URL, 'https://browser.geekbench.com/mac-benchmarks.json');
-            $mac_result = curl_exec($ch);
-            curl_setopt($ch, CURLOPT_URL, 'https://browser.geekbench.com/cuda-benchmarks.json');
-            $cuda_result = curl_exec($ch);
-            curl_setopt($ch, CURLOPT_URL, 'https://browser.geekbench.com/opencl-benchmarks.json');
-            $opencl_result = curl_exec($ch);
+            $web_request = new Request();
+            $options = ['http_errors' => false];
+            $mac_result = (string) $web_request->get('https://browser.geekbench.com/mac-benchmarks.json', $options);
+            $cuda_result = (string) $web_request->get('https://browser.geekbench.com/cuda-benchmarks.json', $options);
+            $opencl_result = (string) $web_request->get('https://browser.geekbench.com/opencl-benchmarks.json', $options);
 
             // Check if we got results
             if (strpos($mac_result, '"devices": [') === false || strpos($cuda_result, '"devices": [') === false || strpos($opencl_result, '"devices": [') === false){
                 print_r("Unable to fetch new JSONs from Geekbench API!!");
-            } else {                                
-                // Delete old cached data
-                $sql = "DELETE FROM `geekbench` WHERE serial_number = 'JSON_CACHE_DATA';";
-                $queryobj->exec($sql);
-
-                // Insert new cached data
-                $sql = "INSERT INTO `geekbench` (serial_number,description,last_cache_pull,mac_benchmarks,cuda_benchmarks,opencl_benchmarks) 
-                        VALUES ('JSON_CACHE_DATA','Do not delete this row','".$current_time."','".$mac_result."','".$cuda_result."','".$opencl_result."')";
-                $queryobj->exec($sql);
+            } else {
+                // Save new cache data to the cache table
+                munkireport\models\Cache::updateOrCreate(
+                    ['module' => 'geekbench', 'property' => 'mac_benchmarks',], ['value' => $mac_result, 'timestamp' => $current_time,]
+                );
+                munkireport\models\Cache::updateOrCreate(
+                    ['module' => 'geekbench', 'property' => 'cuda_benchmarks',], ['value' => $cuda_result, 'timestamp' => $current_time,]
+                );
+                munkireport\models\Cache::updateOrCreate(
+                    ['module' => 'geekbench', 'property' => 'opencl_benchmarks',], ['value' => $opencl_result, 'timestamp' => $current_time,]
+                );
+                munkireport\models\Cache::updateOrCreate(
+                    ['module' => 'geekbench', 'property' => 'last_cache_pull',], ['value' => $current_time, 'timestamp' => $current_time,]
+                );
             }
         }
 
@@ -96,13 +94,14 @@ class Geekbench_model extends \Model
         //
 
         // Get the cached JSONs from the database
-        $sql = "SELECT mac_benchmarks, cuda_benchmarks, opencl_benchmarks FROM `geekbench` WHERE serial_number = 'JSON_CACHE_DATA'";
-        $cached_jsons = $queryobj->query($sql);
+        $mac_benchmarks_json = munkireport\models\Cache::select('value')->where('module', 'geekbench')->where('property', 'mac_benchmarks')->value('value');
+        $cuda_benchmarks_json = munkireport\models\Cache::select('value')->where('module', 'geekbench')->where('property', 'cuda_benchmarks')->value('value');
+        $opencl_benchmarks_json = munkireport\models\Cache::select('value')->where('module', 'geekbench')->where('property', 'opencl_benchmarks')->value('value');
 
         // Decode JSON
-        $benchmarks = json_decode($cached_jsons[0]->mac_benchmarks);
-        $gpu_cuda_benchmarks = json_decode($cached_jsons[0]->cuda_benchmarks);
-        $gpu_opencl_benchmarks = json_decode($cached_jsons[0]->opencl_benchmarks);
+        $benchmarks = json_decode($mac_benchmarks_json);
+        $gpu_cuda_benchmarks = json_decode($cuda_benchmarks_json);
+        $gpu_opencl_benchmarks = json_decode($opencl_benchmarks_json);
 
         // Prepare machine CPU type string for matching
         $machine_cpu = preg_replace("/[^A-Za-z0-9]/", '', explode("@", str_replace(array('(R)','CPU ','(TM)2','(TM)','Core2'), array('','',' 2','','Core 2'), $machine_cpu))[0]);
@@ -201,7 +200,7 @@ class Geekbench_model extends \Model
         }
 
         // Insert last ran timestamp, may be overwritten by $data
-        $this->last_cache_pull = time();
+        $this->last_run = time();
 
         $gpu_model = "";
 
@@ -228,7 +227,7 @@ class Geekbench_model extends \Model
                 $gpu_model = $plist["model"];
 
                 // Insert last ran timestamp
-                $this->last_cache_pull = $plist["last_run"];
+                $this->last_run = $plist["last_run"];
             }
 
             // Clean GPU model
@@ -266,7 +265,7 @@ class Geekbench_model extends \Model
                 }
             }
         }
-        
+
         // Save the data if matched
         if($did_match){
             $this->save();

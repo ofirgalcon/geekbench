@@ -10,17 +10,15 @@
     "pull_in_all": "Pull All Geekbench Scores",
     "leave_page_warning": "MunkiReport is currently processing Geekbench scores. Leaving this page will stop the process.",
     "recheck": "Pull Geekbench Scores",
-    "listing": {
-        "score": "Single CPU",
-        "opencl_score": "OpenCL",
-        "opencl_samples": "OpenCL Samples",
-        "cuda_samples": "CUDA Samples",
-        "cuda_score": "CUDA",
-        "gpu_name": "GPU",
-        "multiscore": "Multi CPU",
-        "last_cache_pull": "Last Ran",
-        "physical_memory": "Memory",
-        "title": "Geekbench Report",
-    	"samples": "Samples"
-    }
+    "score": "Single CPU",
+    "opencl_score": "OpenCL",
+    "opencl_samples": "OpenCL Samples",
+    "cuda_samples": "CUDA Samples",
+    "cuda_score": "CUDA",
+    "gpu_name": "GPU",
+    "multiscore": "Multi CPU",
+    "last_run": "Last Ran",
+    "physical_memory": "Memory",
+    "title": "Geekbench Report",
+    "samples": "Samples"
 }
