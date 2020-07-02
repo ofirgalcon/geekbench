@@ -79,11 +79,11 @@ def main():
     # Get results
     result = dict()
     info = get_gpu_info()
+    cachedir = '%s/cache' % os.path.dirname(os.path.realpath(__file__))
     time_check = {'last_run':check_run_time(os.path.join(cachedir, 'geekbench.plist'))}
     result = merge_two_dicts(flatten_gpu_info(info),time_check)
 
     # Write Geekbench cache file
-    cachedir = '%s/cache' % os.path.dirname(os.path.realpath(__file__))
     output_plist = os.path.join(cachedir, 'geekbench.plist')
     plistlib.writePlist(result, output_plist)
     #print plistlib.writePlistToString(result)
