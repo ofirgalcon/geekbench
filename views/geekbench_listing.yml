@@ -1,0 +1,22 @@
+i18n_title: geekbench.title
+not_null_column: score
+table:
+  - column: machine.computer_name
+    i18n_header: listing.computername
+    formatter: clientDetail
+    tab_link: geekbench-tab
+  - column: reportdata.serial_number
+    i18n_header: serial
+  - {i18n_header: username, column: reportdata.long_username}
+  - {i18n_header: geekbench.geekbench_name, column: machine.machine_desc}
+  - {i18n_header: geekbench.score, column: geekbench.score}
+  - {i18n_header: geekbench.multiscore, column: geekbench.multiscore}
+  - {i18n_header: geekbench.samples, column: geekbench.samples}
+  - {i18n_header: geekbench.opencl_score, column: geekbench.opencl_score}
+  - {i18n_header: geekbench.opencl_samples, column: geekbench.opencl_samples}
+  - {i18n_header: geekbench.cuda_score, column: geekbench.cuda_score}
+  - {i18n_header: geekbench.cuda_samples, column: geekbench.cuda_samples}
+  - {i18n_header: geekbench.metal_score, column: geekbench.metal_score}
+  - {i18n_header: geekbench.metal_samples, column: geekbench.metal_samples}
+  - {i18n_header: geekbench.gpu_name, column: geekbench.gpu_name}
+  - {i18n_header: geekbench.last_run, column: geekbench.last_run, formatter: timestampToMoment}

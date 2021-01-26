@@ -60,53 +60,83 @@ $(document).on('appReady', function(e, lang) {
         // Get JSON of all serial numbers
         $.getJSON(appUrl + '/module/geekbench/pull_all_geekbench_data', function (processdata) {
 
-            $('#Geekbench-System-Status1').html(processdata)
             // Set count of serial numbers to be processed
             var progressmax = (processdata.length);
             var progessvalue = 0;
             $('.progress-bar').attr('aria-valuemax', progressmax);
-            
-            // Process list of serial numbers
-            for (var serialindex = 0; serialindex < progressmax; serialindex++) {
-                // Get JSON for each serial number
-                $.getJSON(appUrl + '/module/geekbench/pull_all_geekbench_data/'+processdata[serialindex], function (resultdata) {
-                    // Check if machine was properly processed
-                    if (!resultdata['status'].includes("Machine processed")){
-                        $('#Geekbench-Match-Errors').append("<br>"+resultdata['status']+" -- "+resultdata['serial'])
-                    }
-                    
-                    // Calculate progress bar's percent
-                    var processpercent = Math.round((((progessvalue+1)/progressmax)*100));
-                    progessvalue++
-                    $('.progress-bar').css('width', (processpercent+'%')).attr('aria-valuenow', processpercent);
-                    $('#Progress-Bar-Percent').text(processpercent+'%');
 
-                    // Cleanup and reset when done processing serials
-                    if ((progessvalue) == progressmax) {
-                        // Make button clickable again and hide process bar elements
-                        $('#GetAllGeekbench').html(i18n.t('geekbench.pull_in_all'));
-                        $('#GetAllGeekbench').removeClass('disabled');
-                        $('#GetJSONs').removeClass('disabled');
-                        geekbench_pull_all_running = 0;
-                        $("#Progress-Space").fadeOut(1200, function() {
-                            $('#Progress-Space').addClass('hide')
-                            var progresselement = document.getElementById('Progress-Space');
-                            progresselement.style.display = null;
-                            progresselement.style.opacity = null;
-                        });
-                        $("#GetAllGeekbench-Progress").fadeOut( 1200, function() {
-                            $('#GetAllGeekbench-Progress').addClass('hide')
-                            var progresselement = document.getElementById('GetAllGeekbench-Progress');
-                            progresselement.style.display = null;
-                            progresselement.style.opacity = null;
-                            $('.progress-bar').css('width', 0+'%').attr('aria-valuenow', 0);
-                        });
-                    }
-                });
-            };
+            var serial_index = 0;
+            var serial = processdata[0];
+
+            // Process the serial numbers
+            process_serial(serial,progessvalue,progressmax,processdata,serial_index);
         });
     });
 });
+    
+    
+// Process each serial number one at a time
+function process_serial(serial,progessvalue,progressmax,processdata,serial_index){
+
+    // Get JSON for each serial number
+    request = $.ajax({
+        url: appUrl + '/module/geekbench/pull_all_geekbench_data/'+processdata[serial_index],
+        type: "get",
+        success: function (obj, resultdata) {
+
+            // Check if machine was properly processed
+            if (!obj['process_status'].includes("Machine processed")){
+                $('#Geekbench-Match-Errors').append("<br>"+obj['process_status']+" -- "+obj['serial'])
+            }
+
+            // Calculate progress bar's percent
+            var processpercent = Math.round((((progessvalue+1)/progressmax)*100));
+            progessvalue++
+            $('.progress-bar').css('width', (processpercent+'%')).attr('aria-valuenow', processpercent);
+            $('#Progress-Bar-Percent').text(progessvalue+"/"+progressmax);
+
+            // Cleanup and reset when done processing serials
+            if ((progessvalue) == progressmax) {
+                // Make button clickable again and hide process bar elements
+                $('#GetAllGeekbench').html(i18n.t('geekbench.pull_in_all'));
+                $('#GetAllGeekbench').removeClass('disabled');
+                $('#UpdateGeekbench').removeClass('disabled');
+                geekbench_pull_all_running = 0;
+                $("#Progress-Space").fadeOut(1200, function() {
+                    $('#Progress-Space').addClass('hide')
+                    var progresselement = document.getElementById('Progress-Space');
+                    progresselement.style.display = null;
+                    progresselement.style.opacity = null;
+                });
+                $("#GetAllGeekbench-Progress").fadeOut( 1200, function() {
+                    $('#GetAllGeekbench-Progress').addClass('hide')
+                    var progresselement = document.getElementById('GetAllGeekbench-Progress');
+                    progresselement.style.display = null;
+                    progresselement.style.opacity = null;
+                    $('.progress-bar').css('width', 0+'%').attr('aria-valuenow', 0);
+                });
+
+                return true;
+            }
+
+            // Go to the next serial
+            serial_index++
+
+            // Get next serial
+            serial = processdata[serial_index];
+
+            // Run function again with new serial
+            process_serial(serial,progessvalue,progressmax,processdata,serial_index)
+        },
+        statusCode: {
+            500: function() {
+                geekbench_pull_all_running = 0;
+                alert("An internal server occurred. Please refresh the page and try again.");
+            }
+        }
+    });
+}
+
 
 // Warning about leaving page if Geekbench pull all is running
 window.onbeforeunload = function() {

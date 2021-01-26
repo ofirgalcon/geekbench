@@ -1,5 +1,7 @@
 <?php
 
+use munkireport\lib\Request;
+
 /**
  * geekbench_controller class
  *
@@ -22,6 +24,12 @@ class Geekbench_controller extends Module_controller
     {
         echo "You've loaded the geekbench module!";
     }
+    
+    public function admin()
+    {
+        $obj = new View();
+        $obj->view('geekbench_admin', [], $this->module_path.'/views/');
+    }
         
     /**
      * Force data pull from Geekbench
@@ -31,49 +39,44 @@ class Geekbench_controller extends Module_controller
      **/
     public function update_cached_jsons()
     {
-        // Authenticate
-        if (! $this->authorized()) {
-            die('Authenticate first.'); // Todo: return json?
-        }
-        
-        // Get the current time
-        $current_time = time();
-        
-        $obj = new View();
-        $queryobj = new Geekbench_model();
-        
         // Get JSONs from Geekbench API
-        ini_set("allow_url_fopen", 1);
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, 'https://browser.geekbench.com/mac-benchmarks.json');
-        $mac_result = curl_exec($ch);
-        curl_setopt($ch, CURLOPT_URL, 'https://browser.geekbench.com/cuda-benchmarks.json');
-        $cuda_result = curl_exec($ch);
-        curl_setopt($ch, CURLOPT_URL, 'https://browser.geekbench.com/opencl-benchmarks.json');
-        $opencl_result = curl_exec($ch);
+        $web_request = new Request();
+        $options = ['http_errors' => false];
+        $mac_result = (string) $web_request->get('https://browser.geekbench.com/mac-benchmarks.json', $options);
+        $cuda_result = (string) $web_request->get('https://browser.geekbench.com/cuda-benchmarks.json', $options);
+        $opencl_result = (string) $web_request->get('https://browser.geekbench.com/opencl-benchmarks.json', $options);
+        $metal_result = (string) $web_request->get('https://browser.geekbench.com/metal-benchmarks.json', $options);
 
         // Check if we got results
         if (strpos($mac_result, '"devices": [') === false || strpos($cuda_result, '"devices": [') === false || strpos($opencl_result, '"devices": [') === false){
             
             // Send result
-            $out = array("status"=>0);
-            $obj->view('json', array('msg' => $out));
-            
-        } else {                                
-            // Delete old cached data
-            $sql = "DELETE FROM `geekbench` WHERE serial_number = 'JSON_CACHE_DATA';";
-            $queryobj->exec($sql);
+            jsonView(array("status"=>0));
 
-            // Insert new cached data
-            $sql = "INSERT INTO `geekbench` (serial_number,description,last_cache_pull,mac_benchmarks,cuda_benchmarks,opencl_benchmarks) 
-                    VALUES ('JSON_CACHE_DATA','Do not delete this row','".$current_time."','".$mac_result."','".$cuda_result."','".$opencl_result."')";
-            $queryobj->exec($sql);
-            
+        } else {
+
+            // Get the current time
+            $current_time = time();
+
+            // Save new cache data to the cache table
+            munkireport\models\Cache::updateOrCreate(
+                ['module' => 'geekbench', 'property' => 'mac_benchmarks',], ['value' => $mac_result, 'timestamp' => $current_time,]
+            );
+            munkireport\models\Cache::updateOrCreate(
+                ['module' => 'geekbench', 'property' => 'cuda_benchmarks',], ['value' => $cuda_result, 'timestamp' => $current_time,]
+            );
+            munkireport\models\Cache::updateOrCreate(
+                ['module' => 'geekbench', 'property' => 'opencl_benchmarks',], ['value' => $opencl_result, 'timestamp' => $current_time,]
+            );
+            munkireport\models\Cache::updateOrCreate(
+                ['module' => 'geekbench', 'property' => 'metal_benchmarks',], ['value' => $metal_result, 'timestamp' => $current_time,]
+            );
+            munkireport\models\Cache::updateOrCreate(
+                ['module' => 'geekbench', 'property' => 'last_cache_pull',], ['value' => $current_time, 'timestamp' => $current_time,]
+            );
+
             // Send result
-            $out = array("status"=>1);
-            $obj->view('json', array('msg' => $out));
+            jsonView(array("status"=>1));
         }
     }
     
@@ -85,52 +88,50 @@ class Geekbench_controller extends Module_controller
      **/
     public function pull_all_geekbench_data($incoming_serial = '')
     {
-        $obj = new View();
-        // Authenticate
-        if (! $this->authorized()) {
-            $obj->view('json', array('msg' => array('error' => 'Not authenticated')));
-            return;
-        }
-
         // Check if we are returning a list of all serials or processing a serial
         // Returns either a list of all serial numbers in MunkiReport OR
         // a JSON of what serial number was just ran with the status of the run
         if ( $incoming_serial == ''){
             // Get all the serial numbers in an object
-            $machine = new Machine_model();
+            $machine = new Geekbench_model();
             $filter = get_machine_group_filter();
 
             $sql = "SELECT machine.serial_number
-                FROM machine
-                LEFT JOIN reportdata USING (serial_number)
-                $filter";
+                    FROM machine
+                    LEFT JOIN reportdata USING (serial_number)
+                    $filter";
 
             // Loop through each serial number for processing
             $out = array();
             foreach ($machine->query($sql) as $serialobj) {
                 $out[] = $serialobj->serial_number;
             }
-            $obj->view('json', array('msg' => $out));
+            jsonView($out);
         } else {
 
             // Check if machine is a virutal machine
-            $machine = new Machine_model($incoming_serial);
-            if (strpos($machine->rs["machine_desc"], 'virtual machine') !== false || strpos($machine->rs["machine_model"], 'VMware') !== false){
-                $out = array("serial"=>$incoming_serial,"status"=>"Virtual machine skipped");
-                $obj->view('json', array('msg' => $out));
-            } else if ($machine->rs["machine_model"] == "" || $machine->rs["machine_model"] == null){
-                $out = array("serial"=>$incoming_serial,"status"=>"Skipping machine, does not exist");
-                $obj->view('json', array('msg' => $out));
+            $queryobj = new Geekbench_model();
+            $sql = "SELECT machine_desc, machine_model FROM `machine` WHERE serial_number = '".$incoming_serial."'";
+            $machine_data = $queryobj->query($sql);
+            $machine_desc = $machine_data[0]->machine_desc;
+            $machine_model = $machine_data[0]->machine_model;
+
+            if (strpos($machine_desc, 'virtual machine') !== false || strpos($machine_model, 'VMware') !== false){
+                $out = array("serial"=>$incoming_serial,"process_status"=>"Virtual machine skipped");
+                jsonView($out);
+            } else if ($machine_model == "" || $machine_model == null){
+                $out = array("serial"=>$incoming_serial,"process_status"=>"Skipping machine, does not exist");
+                jsonView($out);
             } else {
                 $geekbench = new Geekbench_model($incoming_serial);
                 $geekbench_status = $geekbench->process();
                 // Check if machine matched
                 if ($geekbench->rs["score"] == "" || $geekbench->rs["score"] == null){
-                    $out = array("serial"=>$incoming_serial,"status"=>"Machine not matched");
-                    $obj->view('json', array('msg' => $out));
+                    $out = array("serial"=>$incoming_serial,"process_status"=>"Machine not matched");
+                    jsonView($out);
                 } else {
-                    $out = array("serial"=>$incoming_serial,"status"=>"Machine processed");
-                    $obj->view('json', array('msg' => $out));
+                    $out = array("serial"=>$incoming_serial,"process_status"=>"Machine processed");
+                    jsonView($out);
                 }
             }
         }
@@ -144,10 +145,6 @@ class Geekbench_controller extends Module_controller
      **/
     public function recheck_geekbench($serial = '')
     {
-        // Authenticate
-        if (! $this->authorized()) {
-            die('Authenticate first.'); // Todo: return json?
-        }
         // Load model and lookup scores
         if (authorized_for_serial($serial)) {
             $geekbench = new Geekbench_model($serial);
@@ -164,14 +161,7 @@ class Geekbench_controller extends Module_controller
      **/
     public function get_data($serial_number = '')
     {
-        $obj = new View();
-
-        if (! $this->authorized()) {
-            $obj->view('json', array('msg' => 'Not authorized'));
-            return;
-        }
-
-        $geekbench = new Geekbench_model($serial_number);
-        $obj->view('json', array('msg' => $geekbench->rs));
+        $geekbench = new Geekbench_model($serial_number);        
+        jsonView($geekbench->rs);
     }
 } // END class Geekbench_controller

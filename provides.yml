@@ -1,0 +1,12 @@
+admin_pages:
+    admin:
+        view: geekbench_admin
+        i18n: geekbench.geekbench
+client_tabs:
+    geekbench-tab:
+        view: geekbench_tab
+        i18n: geekbench.geekbench
+listings:
+    geekbench:
+        view: geekbench_listing
+        i18n: geekbench.geekbench
