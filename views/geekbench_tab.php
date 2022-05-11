@@ -2,8 +2,16 @@
 
 <div id="geekbench-msg" data-i18n="listing.loading" class="col-lg-12 text-center"></div>
 	<div id="geekbench-view" class="row hide">
-		<div class="col-md-3">
+		<div class="col-md-5">
 			<table class="table table-striped">
+				<tr>
+					<th data-i18n="geekbench.geekbench_name"></th>
+					<td id="geekbench-model_name"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.geekbench_desc"></th>
+					<td id="geekbench-description"></td>
+				</tr>
 				<tr>
 					<th data-i18n="geekbench.score"></th>
 					<td id="geekbench-score"></td>
@@ -17,16 +25,16 @@
 					<td id="geekbench-samples"></td>
 				</tr>	
 				<tr>
-					<th data-i18n="geekbench.geekbench_name"></th>
-					<td id="geekbench-model_name"></td>
-				</tr>
-				<tr>
-					<th data-i18n="geekbench.geekbench_desc"></th>
-					<td id="geekbench-description"></td>
-				</tr>
-				<tr>
 					<th data-i18n="geekbench.gpu_name"></th>
 					<td id="geekbench-gpu_name"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.metal_score"></th>
+					<td id="geekbench-metal_score"></td>
+				</tr>
+				<tr>
+					<th data-i18n="geekbench.metal_samples"></th>
+					<td id="geekbench-metal_samples"></td>
 				</tr>
 				<tr>
 					<th data-i18n="geekbench.opencl_score"></th>
@@ -43,14 +51,6 @@
 				<tr>
 					<th data-i18n="geekbench.cuda_samples"></th>
 					<td id="geekbench-cuda_samples"></td>
-				</tr>
-				<tr>
-					<th data-i18n="geekbench.metal_score"></th>
-					<td id="geekbench-metal_score"></td>
-				</tr>
-				<tr>
-					<th data-i18n="geekbench.metal_samples"></th>
-					<td id="geekbench-metal_samples"></td>
 				</tr>
 				<tr>
 					<th data-i18n="geekbench.last_run"></th>
@@ -75,10 +75,10 @@ $(document).on('appReady', function(e, lang) {
             $('#geekbench-view').removeClass('hide');
 
             // Add data
+            $('#geekbench-model_name').text(data.model_name);
             $('#geekbench-score').text(data.score);
             $('#geekbench-multiscore').text(data.multiscore);
             $('#geekbench-samples').text(data.samples);
-            $('#geekbench-model_name').text(data.model_name);
             $('#geekbench-description').text(data.description);
             $('#geekbench-cuda_score').text(data.cuda_score);
             $('#geekbench-cuda_samples').text(data.cuda_samples);
@@ -96,6 +96,36 @@ $(document).on('appReady', function(e, lang) {
             } else if (colvar !== ""){
                 $('#geekbench-last_run').html('<span title="' + colvar + '">' + moment(colvar).fromNow()+'</span>');   
             }
+
+        	var gscore = data.score;
+        	var gscale = gscore/17.5;
+    		if (gscore){
+        		$('#geekbench-score').html('<div class="progress"><div class="progress-bar progress-bar-info1" style="width: '+gscale+'%;">'+gscore+'</div></div>');
+			}
+
+			var gscore = data.multiscore;
+        	var gscale = gscore/235;
+    		if (gscore){
+        		$('#geekbench-multiscore').html('<div class="progress"><div class="progress-bar progress-bar-info2" style="width: '+gscale+'%;">'+gscore+'</div></div>');
+			}
+
+			var gscore = data.metal_score;
+        	var gscale = gscore/1669;
+    		if (gscore){
+        		$('#geekbench-metal_score').html('<div class="progress"><div class="progress-bar progress-bar-info3" style="width: '+gscale+'%;">'+gscore+'</div></div>');
+			}
+
+			var gscore = data.opencl_score;
+        	var gscale = gscore/1700;
+    		if (gscore){
+        		$('#geekbench-opencl_score').html('<div class="progress"><div class="progress-bar progress-bar-info4" style="width: '+gscale+'%;">'+gscore+'</div></div>');
+			}
+
+			var gscore = data.cuda_score;
+        	var gscale = gscore/2603;
+    		if (gscore){
+        		$('#geekbench-cuda_score').html('<div class="progress"><div class="progress-bar progress-bar-info5" style="width: '+gscale+'%;">'+gscore+'</div></div>');
+			}
         }
     });
 });

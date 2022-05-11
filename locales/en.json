@@ -22,5 +22,6 @@
     "last_run": "Last Ran",
     "physical_memory": "Memory",
     "title": "Geekbench Report",
-    "samples": "Samples"
+    "samples": "Samples",
+    "gpu_cores": "Cores"
 }
