@@ -21,8 +21,8 @@ def check_run_time(cache_file):
     # Check if key exists
     if 'last_run' in out:
         # Only run if it has been more than a week
-        if current_time > int(out["last_run"])+64000:
-            last_run = str(int(out["last_run"])+64000)
+        if current_time > int(out["last_run"])+604000:
+            last_run = str(int(out["last_run"])+604000)
         else:
             exit(0)
     else:
