@@ -23,3 +23,5 @@ Table Schema
 * metal_samples - bigint - How many samples are in Geekbench
 * gpu_name - string - Name of the GPU that is matched
 * last_run - bigint - Timestamp of when scores were last processed for machine
+
+<img width="643" alt="image" src="https://user-images.githubusercontent.com/16665880/167967529-bcdbe263-d9b0-4392-8921-ad1893094025.png">
