@@ -1,4 +1,4 @@
-#!/usr/local/munkireport/munkireport-python2
+#!/usr/local/munkireport/munkireport-python3
 
 import subprocess
 import os
@@ -38,7 +38,10 @@ def get_gpu_info():
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (output, unused_error) = proc.communicate()
     try:
-        plist = plistlib.readPlistFromString(output)
+        try:
+            plist = plistlib.readPlistFromString(output)
+        except AttributeError as e:
+            plist = plistlib.loads(output)
         # system_profiler xml is an array
         sp_dict = plist[0]
         items = sp_dict['_items']
@@ -72,10 +75,6 @@ def merge_two_dicts(x, y):
 def main():
     """Main"""
 
-    # Set the encoding
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-
     # Get results
     result = dict()
     info = get_gpu_info()
@@ -85,7 +84,11 @@ def main():
 
     # Write Geekbench cache file
     output_plist = os.path.join(cachedir, 'geekbench.plist')
-    plistlib.writePlist(result, output_plist)
+    try:
+        plistlib.writePlist(result, output_plist)
+    except:
+        with open(output_plist, 'wb') as fp:
+            plistlib.dump(result, fp, fmt=plistlib.FMT_XML)
     #print plistlib.writePlistToString(result)
 
 if __name__ == "__main__":

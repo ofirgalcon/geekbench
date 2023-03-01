@@ -20,7 +20,7 @@ table:
   - {i18n_header: geekbench.metal_score, column: geekbench.metal_score, formatter: formatGeekbenchMetal}
   - {i18n_header: geekbench.opencl_score, column: geekbench.opencl_score, formatter: formatGeekbenchOpenCL}
 #  - {i18n_header: geekbench.opencl_samples, column: geekbench.opencl_samples}
-  - {i18n_header: geekbench.cuda_score, column: geekbench.cuda_score, formatter: formatGeekbenchCuda}
+  # - {i18n_header: geekbench.cuda_score, column: geekbench.cuda_score, formatter: formatGeekbenchCuda}
 #  - {i18n_header: geekbench.cuda_samples, column: geekbench.cuda_samples}
 #  - {i18n_header: geekbench.metal_samples, column: geekbench.metal_samples}
   - {i18n_header: geekbench.last_run, column: geekbench.last_run, formatter: timestampToMoment}

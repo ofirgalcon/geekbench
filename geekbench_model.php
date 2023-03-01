@@ -66,21 +66,21 @@ class Geekbench_model extends \Model
             $web_request = new Request();
             $options = ['http_errors' => false];
             $mac_result = (string) $web_request->get('https://browser.geekbench.com/mac-benchmarks.json', $options);
-            $cuda_result = (string) $web_request->get('https://browser.geekbench.com/cuda-benchmarks.json', $options);
+            // $cuda_result = (string) $web_request->get('https://browser.geekbench.com/cuda-benchmarks.json', $options);
             $opencl_result = (string) $web_request->get('https://browser.geekbench.com/opencl-benchmarks.json', $options);
             $metal_result = (string) $web_request->get('https://browser.geekbench.com/metal-benchmarks.json', $options);
 
             // Check if we got results
-            if (strpos($mac_result, '"devices": [') === false || strpos($cuda_result, '"devices": [') === false || strpos($opencl_result, '"devices": [') === false){
+            if (strpos($mac_result, '"devices": [') === false || strpos($opencl_result, '"devices": [') === false){
                 print_r("Unable to fetch new JSONs from Geekbench API!!");
             } else {
                 // Save new cache data to the cache table
                 munkireport\models\Cache::updateOrCreate(
                     ['module' => 'geekbench', 'property' => 'mac_benchmarks',], ['value' => $mac_result, 'timestamp' => $current_time,]
                 );
-                munkireport\models\Cache::updateOrCreate(
-                    ['module' => 'geekbench', 'property' => 'cuda_benchmarks',], ['value' => $cuda_result, 'timestamp' => $current_time,]
-                );
+                // munkireport\models\Cache::updateOrCreate(
+                //     ['module' => 'geekbench', 'property' => 'cuda_benchmarks',], ['value' => $cuda_result, 'timestamp' => $current_time,]
+                // );
                 munkireport\models\Cache::updateOrCreate(
                     ['module' => 'geekbench', 'property' => 'opencl_benchmarks',], ['value' => $opencl_result, 'timestamp' => $current_time,]
                 );
@@ -328,7 +328,10 @@ class Geekbench_model extends \Model
                 if ($gpu_metal_benchmark_prepared == 'Iris Pro Graphics'){
                     $gpu_metal_benchmark_prepared = 'Iris Pro';
                 }
-
+                
+                if ($gpu_metal_benchmark_prepared == 'Apple Paravirtual device'){
+                    $gpu_metal_benchmark_prepared = 'Apple M2';
+                }
                 // Check through for a matching GPU
                 if ($gpu_metal_benchmark_prepared == $this->gpu_name){
                     // Fill in data from matching entry

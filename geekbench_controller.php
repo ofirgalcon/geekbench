@@ -43,12 +43,12 @@ class Geekbench_controller extends Module_controller
         $web_request = new Request();
         $options = ['http_errors' => false];
         $mac_result = (string) $web_request->get('https://browser.geekbench.com/mac-benchmarks.json', $options);
-        $cuda_result = (string) $web_request->get('https://browser.geekbench.com/cuda-benchmarks.json', $options);
+        // $cuda_result = (string) $web_request->get('https://browser.geekbench.com/cuda-benchmarks.json', $options);
         $opencl_result = (string) $web_request->get('https://browser.geekbench.com/opencl-benchmarks.json', $options);
         $metal_result = (string) $web_request->get('https://browser.geekbench.com/metal-benchmarks.json', $options);
 
         // Check if we got results
-        if (strpos($mac_result, '"devices": [') === false || strpos($cuda_result, '"devices": [') === false || strpos($opencl_result, '"devices": [') === false){
+        if (strpos($mac_result, '"devices": [') === false || strpos($opencl_result, '"devices": [') === false){
             
             // Send result
             jsonView(array("status"=>0));
@@ -62,9 +62,9 @@ class Geekbench_controller extends Module_controller
             munkireport\models\Cache::updateOrCreate(
                 ['module' => 'geekbench', 'property' => 'mac_benchmarks',], ['value' => $mac_result, 'timestamp' => $current_time,]
             );
-            munkireport\models\Cache::updateOrCreate(
-                ['module' => 'geekbench', 'property' => 'cuda_benchmarks',], ['value' => $cuda_result, 'timestamp' => $current_time,]
-            );
+            // munkireport\models\Cache::updateOrCreate(
+            //     ['module' => 'geekbench', 'property' => 'cuda_benchmarks',], ['value' => $cuda_result, 'timestamp' => $current_time,]
+            // );
             munkireport\models\Cache::updateOrCreate(
                 ['module' => 'geekbench', 'property' => 'opencl_benchmarks',], ['value' => $opencl_result, 'timestamp' => $current_time,]
             );
