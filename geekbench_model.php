@@ -53,6 +53,15 @@ class Geekbench_model extends \Model
             exit(0);
         }
 
+        // Get GPU cores from gpu table
+        $sql_gpu = "SELECT num_cores FROM `gpu` WHERE serial_number = '".$this->serial_number."'";
+        $gpu_data = $queryobj->query($sql_gpu);
+        if (!empty($gpu_data)) {
+            $machine_gpu_cores = $gpu_data[0]->num_cores;
+        } else {
+            $machine_gpu_cores = 0; // Default value if no GPU data is found
+        }
+
         // Check if we have cached Geekbench JSONs
         $last_cache_pull = munkireport\models\Cache::select('value')->where('module', 'geekbench')->where('property', 'last_cache_pull')->value('value');
 
@@ -221,16 +230,46 @@ class Geekbench_model extends \Model
                 $benchmark_year = "";
             }
 
+            // Fix for id477 error in json
+            if ($benchmark->description === "Apple M1 Pro @ 3.2 GHz (10 CPU cores, 10 GPU cores)") {
+                $benchmark->description = "Apple M1 Pro @ 3.2 GHz (10 CPU cores, 16 GPU cores)";
+            }
+            
+
 //o         $benchmark_match = ($benchmark_desc.$benchmark_inch.$benchmark_year);
             $benchmark_match = ($benchmark_desc.$benchmark_inch);
 
             // Process benchmark CPU for matching
             $benchmark_cpu = preg_replace("/[^A-Za-z0-9]/", '', explode("@", $benchmark->description)[0]);
             $benchmark_cores = preg_replace("/[^0-9]/", '', explode("GHz",$benchmark->description)[1]);
+            // $benchmark_cores = substr($benchmark_cores, 0, 1);
 
+            $benchmark_gpu_cores_pattern = '/(\d+)\s+GPU cores/';
+            if (preg_match($benchmark_gpu_cores_pattern, $benchmark->description, $matches)) {
+                $benchmark_gpu_cores = intval($matches[1]);
+            } else {
+                $benchmark_gpu_cores = 0;
+            }
+
+            // temporary workaround
+            if ($benchmark_cores === "88" || $benchmark_cores === "87" || $benchmark_cores === "810") {
+                $benchmark_cores = "8";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "10") {
+                $benchmark_cores = "10";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "12") {
+                $benchmark_cores = "12";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "20") {
+                $benchmark_cores = "20";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "24") {
+                $benchmark_cores = "24";
+            }
+            
+            if ($benchmark_gpu_cores === 0) {
+                $benchmark_gpu_cores = $machine_gpu_cores;
+            }
 
             // Check through for a matching machine description and CPU
-            if ($benchmark_match == $machine_match && $benchmark_cpu == $machine_cpu && $benchmark_cores == $machine_cores){
+            if ($benchmark_match == $machine_match && $benchmark_cpu == $machine_cpu && $benchmark_cores == $machine_cores && $benchmark_gpu_cores == $machine_gpu_cores){
                 
                 // Fill in data from matching entry
                 $this->score = $benchmark->score;
@@ -238,6 +277,7 @@ class Geekbench_model extends \Model
                 $this->model_name = $benchmark->name;
                 $this->description = $benchmark->description;
                 $this->samples = $benchmark->samples;
+                $this->cuda_metal = $benchmark->metal;
                 
                 $did_match = true;
                 
@@ -337,12 +377,30 @@ class Geekbench_model extends \Model
                     // Fill in data from matching entry
                     $this->metal_samples = $gpu_metal_benchmark->samples;
                     $this->metal_score = $gpu_metal_benchmark->score;
-
+                    // new metal scores
+                    $new_metal = $benchmark->metal;
+                    $new_opencl = $benchmark->opencl;
+                    if (!empty($new_metal)) {
+                        $this->metal_score = $new_metal;
+                    }
+                    if (!empty($new_opencl)) {
+                        $this->opencl_score = $new_opencl;
+                    }
                     // Exit loop because we found a match
                     break;
                 }
             }
         }
+
+        // Debugging output
+        // var_dump($benchmark_cores);
+        // ob_end_flush();
+        // var_dump($machine_cores);
+        // print($machine_cores . "<br>");
+        
+        // $this->cuda_score = 111;
+        // $this->cuda_samples = $machine_gpu_cores;
+        // $this->cuda_samples = $test_metal;
 
         // Save the data if matched
         if($did_match){

@@ -1,7 +1,7 @@
 var formatGeekbench = function(colNumber, row){
     var col = $('td:eq('+colNumber+')', row),
         score = col.text();
-        scale = score*100/2647;
+        scale = score*100/2803;
     if (score){
         col.html('<div class="progress"><div class="progress-bar progress-bar-info1" style="width: '+scale+'%;">'+score+'</div></div>');
     }
@@ -10,7 +10,7 @@ var formatGeekbench = function(colNumber, row){
 var formatGeekbenchMulti = function(colNumber, row){
     var col = $('td:eq('+colNumber+')', row),
         score = col.text();
-        scale = score*100/17368;
+        scale = score*100/21299;
     if (score){
         col.html('<div class="progress"><div class="progress-bar progress-bar-info2" style="width: '+scale+'%;">'+score+'</div></div>');
     }
@@ -19,7 +19,7 @@ var formatGeekbenchMulti = function(colNumber, row){
 var formatGeekbenchMetal = function(colNumber, row){
     var col = $('td:eq('+colNumber+')', row),
         score = col.text();
-        scale = score*100/182249;
+        scale = score*100/219606;
     if (score){
         col.html('<div class="progress"><div class="progress-bar progress-bar-info3" style="width: '+scale+'%;">'+score+'</div></div>');
     }

@@ -21,7 +21,7 @@
     "multiscore": "Multi CPU",
     "last_run": "Last Ran",
     "physical_memory": "Memory",
-    "title": "Geekbench Report",
+    "title": "Geekbench 6 Report",
     "samples": "Samples",
     "gpu_cores": "Cores"
 }

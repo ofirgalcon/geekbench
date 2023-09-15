@@ -1,5 +1,5 @@
 i18n_title: geekbench.title
-not_null_column: score
+# not_null_column: score
 js_link: module/geekbench/js/geekbench
 table:
   - column: machine.computer_name

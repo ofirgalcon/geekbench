@@ -1,4 +1,4 @@
-<h2>Geekbench  <a data-i18n="geekbench.recheck" class="btn btn-default btn-xs" href="<?php echo url('module/geekbench/recheck_geekbench/' . $serial_number);?>"></a></h2>
+<h2>Geekbench 6  <a data-i18n="geekbench.recheck" class="btn btn-default btn-xs" href="<?php echo url('module/geekbench/recheck_geekbench/' . $serial_number);?>"></a></h2>
 
 <div id="geekbench-msg" data-i18n="listing.loading" class="col-lg-12 text-center"></div>
 	<div id="geekbench-view" class="row hide">
@@ -44,14 +44,14 @@
 					<th data-i18n="geekbench.opencl_samples"></th>
 					<td id="geekbench-opencl_samples"></td>
 				</tr>
-				<tr>
+				<!-- <tr>
 					<th data-i18n="geekbench.cuda_score"></th>
 					<td id="geekbench-cuda_score"></td>
 				</tr>
 				<tr>
 					<th data-i18n="geekbench.cuda_samples"></th>
 					<td id="geekbench-cuda_samples"></td>
-				</tr>
+				</tr> -->
 				<tr>
 					<th data-i18n="geekbench.last_run"></th>
 					<td id="geekbench-last_run"></td>
@@ -98,19 +98,19 @@ $(document).on('appReady', function(e, lang) {
             }
 
         	var gscore = data.score;
-        	var gscale = gscore*100/2647;
+        	var gscale = gscore*100/2803;
     		if (gscore){
         		$('#geekbench-score').html('<div class="progress"><div class="progress-bar progress-bar-info1" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}
 
 			var gscore = data.multiscore;
-        	var gscale = gscore*100/17368;
+        	var gscale = gscore*100/21299;
     		if (gscore){
         		$('#geekbench-multiscore').html('<div class="progress"><div class="progress-bar progress-bar-info2" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}
 
 			var gscore = data.metal_score;
-        	var gscale = gscore*100/182249;
+        	var gscale = gscore*100/219606;
     		if (gscore){
         		$('#geekbench-metal_score').html('<div class="progress"><div class="progress-bar progress-bar-info3" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}
@@ -121,11 +121,11 @@ $(document).on('appReady', function(e, lang) {
         		$('#geekbench-opencl_score').html('<div class="progress"><div class="progress-bar progress-bar-info4" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}
 
-			var gscore = data.cuda_score;
-        	var gscale = gscore*100/260346;
-    		if (gscore){
-        		$('#geekbench-cuda_score').html('<div class="progress"><div class="progress-bar progress-bar-info5" style="width: '+gscale+'%;">'+gscore+'</div></div>');
-			}
+			// var gscore = data.cuda_score;
+        	// var gscale = gscore*100/260346;
+    		// if (gscore){
+        	// 	$('#geekbench-cuda_score').html('<div class="progress"><div class="progress-bar progress-bar-info5" style="width: '+gscale+'%;">'+gscore+'</div></div>');
+			// }
         }
     });
 });
