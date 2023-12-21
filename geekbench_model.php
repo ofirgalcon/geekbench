@@ -256,12 +256,30 @@ class Geekbench_model extends \Model
                 $benchmark_cores = "8";
             } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "10") {
                 $benchmark_cores = "10";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "11") {
+                $benchmark_cores = "11";
             } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "12") {
                 $benchmark_cores = "12";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "14") {
+                $benchmark_cores = "14";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "18") {
+                $benchmark_cores = "18";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "19") {
+                $benchmark_cores = "19";
             } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "20") {
                 $benchmark_cores = "20";
             } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "24") {
                 $benchmark_cores = "24";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "30") {
+                $benchmark_cores = "30";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "38") {
+                $benchmark_cores = "38";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "40") {
+                $benchmark_cores = "40";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "60") {
+                $benchmark_cores = "60";
+            } else if (strlen($benchmark_cores) >= 2 && substr($benchmark_cores, 0, 2) === "76") {
+                $benchmark_cores = "76";
             }
             
             if ($benchmark_gpu_cores === 0) {
@@ -377,14 +395,16 @@ class Geekbench_model extends \Model
                     // Fill in data from matching entry
                     $this->metal_samples = $gpu_metal_benchmark->samples;
                     $this->metal_score = $gpu_metal_benchmark->score;
-                    // new metal scores
+                    // new metal scores 2023
                     $new_metal = $benchmark->metal;
                     $new_opencl = $benchmark->opencl;
                     if (!empty($new_metal)) {
                         $this->metal_score = $new_metal;
+                        $this->metal_samples = null;
                     }
                     if (!empty($new_opencl)) {
                         $this->opencl_score = $new_opencl;
+                        $this->opencl_samples = null;
                     }
                     // Exit loop because we found a match
                     break;

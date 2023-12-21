@@ -98,19 +98,19 @@ $(document).on('appReady', function(e, lang) {
             }
 
         	var gscore = data.score;
-        	var gscale = gscore*100/2803;
+        	var gscale = gscore*100/3125;
     		if (gscore){
         		$('#geekbench-score').html('<div class="progress"><div class="progress-bar progress-bar-info1" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}
 
 			var gscore = data.multiscore;
-        	var gscale = gscore*100/21299;
+        	var gscale = gscore*100/21312;
     		if (gscore){
         		$('#geekbench-multiscore').html('<div class="progress"><div class="progress-bar progress-bar-info2" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}
 
 			var gscore = data.metal_score;
-        	var gscale = gscore*100/219606;
+        	var gscale = gscore*100/219969;
     		if (gscore){
         		$('#geekbench-metal_score').html('<div class="progress"><div class="progress-bar progress-bar-info3" style="width: '+gscale+'%;">'+gscore+'</div></div>');
 			}

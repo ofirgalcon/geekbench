@@ -1,6 +1,6 @@
 
 	<div id="geekbench-summary-tab" class="col-lg-4">
-		<h4><i class="fa fa-tachometer"></i> <span data-i18n="geekbench.geekbench"></span></h4>
+		<h4><i class="fa fa-tachometer"></i> <span data-i18n="geekbench.geekbench"></span><a data-toggle="tab" title="Geekbench" class="btn btn-xs pull-right" href="#geekbench-tab" aria-expanded="false"><i class="fa fa-arrow-right"></i></a></h4>
 			<table class="table table-striped">
 				<tr>
 					<th data-i18n="geekbench.score"></th>
@@ -38,19 +38,19 @@ $(document).on('appReady', function(e, lang) {
             $('#geekbench-widget-metal_score').text(data.metal_score);
             
         	var gscore = data.score;
-        	var gscale = gscore*100/2803;
+        	var gscale = gscore*100/3125;
     		if (gscore){
         		$('#geekbench-widget-score').html('<div class="progress" style="height: 16px;"><div class="progress-bar progress-bar-info1" style="width: '+gscale+'%; line-height: 17px;">'+gscore+'</div></div>');
 			}
 
 			var gscore = data.multiscore;
-        	var gscale = gscore*100/21299;
+        	var gscale = gscore*100/21312;
     		if (gscore){
         		$('#geekbench-widget-multiscore').html('<div class="progress" style="height: 16px;"><div class="progress-bar progress-bar-info2" style="width: '+gscale+'%; line-height: 17px;">'+gscore+'</div></div>');
 			}
 
 			var gscore = data.metal_score;
-        	var gscale = gscore*100/219606;
+        	var gscale = gscore*100/219969;
     		if (gscore){
         		$('#geekbench-widget-metal_score').html('<div class="progress" style="height: 16px;"><div class="progress-bar progress-bar-info3" style="width: '+gscale+'%; line-height: 17px;">'+gscore+'</div></div>');
 			}
