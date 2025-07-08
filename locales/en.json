@@ -7,7 +7,7 @@
     "get_jsons_failed": "There was a problem updating the cached JSONs! :(",
     "get_jsons_success": "Cached JSONs successfully updated :D",
     "get_jsons": "Refresh Cached JSON Files",
-    "pull_in_all": "Pull All Geekbench Scores",
+    "pull_in_all": "Update Clients",
     "leave_page_warning": "MunkiReport is currently processing Geekbench scores. Leaving this page will stop the process.",
     "recheck": "Pull Geekbench Scores",
     "score": "Single CPU",
@@ -23,5 +23,16 @@
     "physical_memory": "Memory",
     "title": "Geekbench 6 Report",
     "samples": "Samples",
-    "gpu_cores": "Cores"
+    "gpu_cores": "Cores",
+    "model_count": "Models in Cache",
+    "mac_models": "Mac Models",
+    "opencl_models": "OpenCL Models",
+    "metal_models": "Metal Models",
+    "total_models": "Total Models",
+    "last_updated": "Cache Last Updated",
+    "max_scores": "Maximum Scores",
+    "score_model": "Single CPU Model",
+    "multiscore_model": "Multi CPU Model",
+    "metal_score_model": "Metal Model",
+    "opencl_score_model": "OpenCL Model"
 }

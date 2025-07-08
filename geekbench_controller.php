@@ -74,6 +74,11 @@ class Geekbench_controller extends Module_controller
             munkireport\models\Cache::updateOrCreate(
                 ['module' => 'geekbench', 'property' => 'last_cache_pull',], ['value' => $current_time, 'timestamp' => $current_time,]
             );
+            
+            // Clear the max_scores cache so it will be recalculated on next request
+            munkireport\models\Cache::where('module', 'geekbench')
+                ->where('property', 'max_scores')
+                ->delete();
 
             // Send result
             jsonView(array("status"=>1));
@@ -163,5 +168,192 @@ class Geekbench_controller extends Module_controller
     {
         $geekbench = new Geekbench_model($serial_number);        
         jsonView($geekbench->rs);
+    }
+    
+    /**
+     * Get maximum scores from cached benchmark data
+     *
+     * @return void
+     * @author [Your Name]
+     **/
+    public function get_max_scores()
+    {
+        // Initialize result array with default values
+        $result = [
+            'score' => 1000,
+            'multiscore' => 10000,
+            'metal_score' => 100000,
+            'opencl_score' => 100000,
+            'cuda_score' => 100000
+        ];
+        
+        try {
+            // Check if we already have cached max scores and when they were last updated
+            $cached_max_scores = munkireport\models\Cache::select('value', 'timestamp')
+                ->where('module', 'geekbench')
+                ->where('property', 'max_scores')
+                ->first();
+                
+            // Get the timestamp of when the Mac benchmarks were last updated
+            $mac_benchmarks_timestamp = munkireport\models\Cache::select('timestamp')
+                ->where('module', 'geekbench')
+                ->where('property', 'mac_benchmarks')
+                ->value('timestamp');
+            
+            // If we have cached max scores and they're newer than the Mac benchmarks data,
+            // use the cached values instead of recalculating
+            if ($cached_max_scores && 
+                $mac_benchmarks_timestamp && 
+                $cached_max_scores->timestamp >= $mac_benchmarks_timestamp) {
+                
+                // Use the cached max scores
+                $cached_values = json_decode($cached_max_scores->value, true);
+                if (is_array($cached_values)) {
+                    return jsonView($cached_values);
+                }
+            }
+            
+            // If we don't have cached max scores or they're outdated, calculate them
+            
+            // Retrieve the Mac benchmarks JSON from the database
+            $mac_benchmarks_json = munkireport\models\Cache::select('value')
+                ->where('module', 'geekbench')
+                ->where('property', 'mac_benchmarks')
+                ->value('value');
+            
+            // Process Mac benchmarks for all scores
+            if ($mac_benchmarks_json) {
+                $benchmarks = json_decode($mac_benchmarks_json);
+                if (isset($benchmarks->devices) && is_array($benchmarks->devices)) {
+                    // Initialize max values
+                    $max_score = 1000;
+                    $max_multiscore = 10000;
+                    $max_metal_score = 100000;
+                    $max_opencl_score = 100000;
+                    
+                    // Find maximum scores in a single pass
+                    foreach ($benchmarks->devices as $device) {
+                        // Single-core score
+                        if (isset($device->score) && $device->score > $max_score) {
+                            $max_score = $device->score;
+                        }
+                        
+                        // Multi-core score
+                        if (isset($device->multicore_score) && $device->multicore_score > $max_multiscore) {
+                            $max_multiscore = $device->multicore_score;
+                        }
+                        
+                        // Metal score
+                        if (isset($device->metal) && $device->metal > $max_metal_score) {
+                            $max_metal_score = $device->metal;
+                        }
+                        
+                        // OpenCL score
+                        if (isset($device->opencl) && $device->opencl > $max_opencl_score) {
+                            $max_opencl_score = $device->opencl;
+                        }
+                    }
+                    
+                    // Update result with found maximum values
+                    $result['score'] = $max_score;
+                    $result['multiscore'] = $max_multiscore;
+                    $result['metal_score'] = $max_metal_score;
+                    $result['opencl_score'] = $max_opencl_score;
+                    
+                    // Cache the calculated max scores
+                    $current_time = time();
+                    munkireport\models\Cache::updateOrCreate(
+                        ['module' => 'geekbench', 'property' => 'max_scores'],
+                        ['value' => json_encode($result), 'timestamp' => $current_time]
+                    );
+                }
+            }
+            
+        } catch (Exception $e) {
+            // If an error occurs, use default values
+        }
+        
+        jsonView($result);
+    }
+    
+    /**
+     * Get count of models in the JSON cache
+     *
+     * @return void
+     * @author Claude
+     **/
+    public function get_model_count()
+    {
+        $result = [
+            'mac_count' => 0,
+            'opencl_count' => 0,
+            'metal_count' => 0,
+            'total_count' => 0,
+            'last_updated' => 0
+        ];
+        
+        try {
+            // Get the last time cached Geekbench JSON data was pulled
+            $last_cache_pull = munkireport\models\Cache::select('value')
+                ->where('module', 'geekbench')
+                ->where('property', 'last_cache_pull')
+                ->value('value');
+                
+            if ($last_cache_pull) {
+                $result['last_updated'] = $last_cache_pull;
+            }
+            
+            // Retrieve the Mac benchmarks JSON from the database
+            $mac_benchmarks_json = munkireport\models\Cache::select('value')
+                ->where('module', 'geekbench')
+                ->where('property', 'mac_benchmarks')
+                ->value('value');
+                
+            // Retrieve the OpenCL benchmarks JSON from the database
+            $opencl_benchmarks_json = munkireport\models\Cache::select('value')
+                ->where('module', 'geekbench')
+                ->where('property', 'opencl_benchmarks')
+                ->value('value');
+                
+            // Retrieve the Metal benchmarks JSON from the database
+            $metal_benchmarks_json = munkireport\models\Cache::select('value')
+                ->where('module', 'geekbench')
+                ->where('property', 'metal_benchmarks')
+                ->value('value');
+            
+            // Count Mac models
+            if ($mac_benchmarks_json) {
+                $benchmarks = json_decode($mac_benchmarks_json);
+                if (isset($benchmarks->devices) && is_array($benchmarks->devices)) {
+                    $result['mac_count'] = count($benchmarks->devices);
+                }
+            }
+            
+            // Count OpenCL models
+            if ($opencl_benchmarks_json) {
+                $benchmarks = json_decode($opencl_benchmarks_json);
+                if (isset($benchmarks->devices) && is_array($benchmarks->devices)) {
+                    $result['opencl_count'] = count($benchmarks->devices);
+                }
+            }
+            
+            // Count Metal models
+            if ($metal_benchmarks_json) {
+                $benchmarks = json_decode($metal_benchmarks_json);
+                if (isset($benchmarks->devices) && is_array($benchmarks->devices)) {
+                    $result['metal_count'] = count($benchmarks->devices);
+                }
+            }
+            
+            // Calculate total count
+            $result['total_count'] = $result['mac_count'] + $result['opencl_count'] + $result['metal_count'];
+            
+            // Return the counts
+            jsonView($result);
+            
+        } catch (Exception $e) {
+            // Return empty result on error
+            jsonView($result);
+        }
     }
 } // END class Geekbench_controller
