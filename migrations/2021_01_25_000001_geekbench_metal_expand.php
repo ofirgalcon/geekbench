@@ -4,7 +4,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Capsule\Manager as Capsule;
 
-class GeekbenchExpand extends Migration
+class GeekbenchMetalExpand extends Migration
 {
     private $tableName = 'geekbench';
 
@@ -32,4 +32,4 @@ class GeekbenchExpand extends Migration
             $table->dropColumn('metal_samples');
         });
     }
-}
+} 
